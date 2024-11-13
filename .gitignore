@@ -1,0 +1,7 @@
+node_modules
+dist
+.nuxt
+docker-compose-testing.yml
+target
+.vscode
+.output
