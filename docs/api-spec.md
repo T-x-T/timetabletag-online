@@ -1,10 +1,5 @@
 # create game
 POST /api/v1/games
-
-returns game_id (UUIDv4)
-
-# join game
-POST /api/v1/games/{game_id}/players
 body:
 ```json
 {
@@ -12,8 +7,38 @@ body:
 }
 ```
 
-returns player_id (UUIDv4)
+returns game_id (UUIDv4) + invite_code
+
+```json
+{
+	"game_id": "2238db88-27d4-4a05-98bc-bd973934b83d",
+	"invite_code": "012-345",
+}
+```
+
+# join game
+POST /api/v1/invite/{invite_code}/join
+body:
+```json
+{
+	"display_name": "TheTxT"
+}
+```
+
+returns player_id (UUIDv4) and game_id (UUIDv4)
+the game_id is used for all further interaction with the current game
 the player_id is unique to the game and will identify the player. not to be shared with the other players as it gets used for authentication during the game
+```json
+{
+	"game_id": "2238db88-27d4-4a05-98bc-bd973934b83d",
+	"player_id": "59628524-5c28-4c7e-890f-20bba691853e",
+}
+```
+
+# start game
+POST /api/v1/games/{game_id}/start
+
+used to start the game, can only be called by the host
 
 # get current game state
 GET /api/v1/games/{game_id}/current_state
@@ -60,7 +85,7 @@ POST /api/v1/games/{game_id}/make_turn
 body:
 ```json
 {
-	"destination": "copenhagen", //the id of the spot the player moves to
+	"next_location": "copenhagen", //the id of the spot the player moves to
 	"use_card": "joker", //the type of card the player used to make the turn
 	"buy_event_card": true, //indicates that the player buys an event card
 	"use_event_card": "some_card_id", //event card that gets used for the turn
@@ -74,7 +99,7 @@ body:
 success response (200):
 ```json
 {
-	"coins_received": 2, //set if destination was a coin field
+	"coins_received": 2, //set if next_location was a coin field
 	"event_card_received": "some_other_card_id", //set if player purchased an event card
 	"event_card_bought": true, //set true if an event card was already purchased during the current turn, cant buy multiple in a single turn
 	"runner_caught": false, //will be true when the hider was caught, gets only sent when finish_move was true
