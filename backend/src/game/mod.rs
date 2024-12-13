@@ -3,6 +3,7 @@ mod test;
 
 use uuid::Uuid;
 use std::collections::BTreeMap;
+use std::error::Error;
 use rand::prelude::*;
 
 type GameId = Uuid;
@@ -26,6 +27,7 @@ pub struct Game {
 	winning_team: Option<String>,
 	win_condition: Option<String>,
 	runner_path: Vec<String>,
+	in_progress_move: Option<Move>,
 }
 
 impl Game {
@@ -56,10 +58,15 @@ impl Game {
 			winning_team: None,
 			win_condition: None,
 			runner_path: Vec::new(),
+			in_progress_move: None,
 		}
 	}
 
-	pub fn join(mut self, display_name: String) -> PlayerId {
+	pub fn join(&mut self, display_name: String) -> Result<PlayerId, Box<dyn Error>> {
+		if self.players.len() >= 4 {
+			return Err(Box::new(crate::CustomError::LobbyFull));
+		}
+		
 		let id = PlayerId::new_v4();
 		let player = Player {
 			id: id.clone(),
@@ -68,16 +75,41 @@ impl Game {
 
 		self.players.push(player);
 		
-		return id;
+		return Ok(id);
 	}
 
-	pub fn make_move(mut self, move_made: Move) -> MoveResult {
+	pub fn start(&mut self, player_id: PlayerId) -> Result<(), Box<dyn Error>> {
+		if player_id != self.host {
+			return Err(Box::new(crate::CustomError::ActionNotAllowed));
+		}
+		
+		if self.players.len() <= 2 {
+			return Err(Box::new(crate::CustomError::LobbyNotFullEnough));
+		}
 
-		return MoveResult::default();
+		if self.state != GameState::Lobby {
+			return Err(Box::new(crate::CustomError::InvalidGameState));
+		}
+
+		return Ok(());
+	}
+
+	pub fn make_move(&mut self, move_made: Move) -> Result<MoveResult, Box<dyn Error>> {
+		if !self.current_turn.as_ref().is_some_and(|x| x.id == move_made.player_id) {
+			return Err(Box::new(crate::CustomError::NotYourTurn));
+		}
+		
+		if self.in_progress_move.is_none() {
+			self.in_progress_move = Some(move_made);	
+		}
+
+
+
+		return Ok(MoveResult::default());
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum GameState {
 	Lobby,
 	InProgress,
