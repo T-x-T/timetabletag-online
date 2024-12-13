@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 use uuid::Uuid;
 use std::collections::BTreeMap;
 use rand::prelude::*;
@@ -28,7 +31,7 @@ pub struct Game {
 impl Game {
 	pub fn create(display_name: String) -> Self {
 		let mut rng = thread_rng();
-		let rand_destination_index = rng.gen_range(1..=5);
+		let rand_destination_index = rng.gen_range(0..=4);
 
 		let player_id = PlayerId::new_v4();
 		let player = Player {
