@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 uuid = {version="1.11.0",features = ["v4"]}
 rand = "0.8.5"
+actix-web = { version = "4.9.0", default-features = false, features = ["compress-gzip", "macros"] }
+futures-util = "0.3.31"
