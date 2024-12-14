@@ -1,7 +1,9 @@
 mod game;
 mod rest_api;
 
-fn main() {
+#[actix_web::main]
+async fn main() {
+  rest_api::initialize_webserver().await;
   println!("Hello, world!");
 }
 

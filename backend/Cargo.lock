@@ -220,6 +220,8 @@ dependencies = [
  "actix-web",
  "futures-util",
  "rand",
+ "serde",
+ "serde_json",
  "uuid",
 ]
 

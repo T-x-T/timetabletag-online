@@ -1,9 +1,5 @@
-use actix_web::{dev::Service as _, web, App, HttpServer, HttpRequest, middleware};
-use std::error::Error;
+use actix_web::{dev::Service as _, web, App, HttpServer, middleware};
 use futures_util::future::FutureExt;
-use uuid::Uuid;
-
-use crate::CustomError;
 
 pub struct AppState {
 	pub test: String,
@@ -25,6 +21,7 @@ pub async fn initialize_webserver() -> std::io::Result<()> {
 					return res;
 				})
 			})
+			.service(crate::game::rest_api::create_game);
 	})
 		.bind(("0.0.0.0", api_port))?
 		.run()

@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod test;
 
+pub mod rest_api;
+
 use uuid::Uuid;
 use std::collections::BTreeMap;
 use std::error::Error;
