@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-uuid = {version="1.11.0",features = ["v4"]}
+uuid = {version="1.11.0",features = ["v4", "serde"]}
 rand = "0.8.5"
 actix-web = { version = "4.9.0", default-features = false, features = ["compress-gzip", "macros"] }
 futures-util = "0.3.31"

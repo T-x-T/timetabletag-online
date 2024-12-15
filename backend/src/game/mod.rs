@@ -14,6 +14,7 @@ type PlayerId = Uuid;
 #[derive(Debug, Clone)]
 pub struct Game {
 	id: GameId,
+	invite_code: String,
 	host: PlayerId,
 	state: GameState,
 	runner: Option<Player>,
@@ -36,6 +37,8 @@ impl Game {
 	pub fn create(display_name: String) -> Self {
 		let mut rng = thread_rng();
 		let rand_destination_index = rng.gen_range(0..=4);
+		let invite_code_part1 = rng.gen_range(0..=999);
+		let invite_code_part2 = rng.gen_range(0..=999);
 
 		let player_id = PlayerId::new_v4();
 		let player = Player {
@@ -45,6 +48,7 @@ impl Game {
 
 		return Self {
 			id: GameId::new_v4(),
+			invite_code: format!("{invite_code_part1:0>3}-{invite_code_part2:0>3}"), //TODO: collision possible
 			host: player_id,
 			state: GameState::Lobby,
 			runner: None,
