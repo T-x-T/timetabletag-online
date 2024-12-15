@@ -17,7 +17,7 @@ returns game_id (UUIDv4) + invite_code
 ```
 
 # join game
-POST /api/v1/invite/{invite_code}/join
+POST /api/v1/invites/{invite_code}/join
 body:
 ```json
 {
