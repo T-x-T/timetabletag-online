@@ -3,7 +3,7 @@ mod rest_api;
 
 #[actix_web::main]
 async fn main() {
-  rest_api::initialize_webserver().await;
+  let _ = rest_api::initialize_webserver().await;
   println!("Hello, world!");
 }
 

@@ -1,4 +1,4 @@
-use actix_web::{get, post, put, delete, web, HttpResponse, HttpRequest, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use crate::rest_api::AppState;
 use serde::{Deserialize, Serialize};
 use super::*;
@@ -9,7 +9,7 @@ struct JoinGamePostBody {
 }
 
 #[post("/api/v1/games")]
-pub async fn create_game(data: web::Data<AppState>, req: HttpRequest, body: web::Json<JoinGamePostBody>) -> impl Responder {
+pub async fn create_game(data: web::Data<AppState>, body: web::Json<JoinGamePostBody>) -> impl Responder {
 	let game = Game::create(body.display_name.clone());
 
 	match data.games.try_lock() {
@@ -25,7 +25,7 @@ pub async fn create_game(data: web::Data<AppState>, req: HttpRequest, body: web:
 }
 
 #[post("/api/v1/invites/{invite_code}/join")]
-pub async fn join_game(data: web::Data<AppState>, req: HttpRequest, body: web::Json<JoinGamePostBody>, invite_code: web::Path<String>) -> impl Responder {
+pub async fn join_game(data: web::Data<AppState>, body: web::Json<JoinGamePostBody>, invite_code: web::Path<String>) -> impl Responder {
 	match data.games.try_lock() {
 		Ok(mut games) => {
 			match games.iter().filter(|x| x.1.invite_code == invite_code.clone()).map(|x| x.1).next() {
@@ -51,7 +51,7 @@ struct LobbyGameState {
 }
 
 #[get("/api/v1/games/{game_id}/current_state")]
-pub async fn get_current_state(data: web::Data<AppState>, req: HttpRequest, game_id: web::Path<Uuid>) -> impl Responder {
+pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uuid>) -> impl Responder {
 	match data.games.try_lock() {
 		Ok(games) => {
 			match games.get(&game_id) {

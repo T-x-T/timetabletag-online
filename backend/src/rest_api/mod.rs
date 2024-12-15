@@ -1,5 +1,5 @@
 use actix_web::{dev::Service as _, web, App, HttpServer, middleware};
-use actix_web::{get, HttpResponse, HttpRequest, Responder};
+use actix_web::{get, HttpResponse, Responder};
 use futures_util::future::FutureExt;
 use std::{collections::BTreeMap, sync::{Arc, Mutex}};
 use uuid::Uuid;
@@ -43,7 +43,7 @@ pub async fn initialize_webserver() -> std::io::Result<()> {
 
 
 #[get("/api/v1/test")]
-pub async fn test(data: web::Data<AppState>, req: HttpRequest) -> impl Responder {
+pub async fn test(data: web::Data<AppState>) -> impl Responder {
 	let mut num = data.test.lock().unwrap();
 	*num += 1;
 
