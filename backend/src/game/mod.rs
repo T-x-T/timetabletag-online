@@ -25,7 +25,7 @@ pub struct Game {
 	coins_chasers: usize,
 	timetable_cards: BTreeMap<PlayerId, Vec<String>>,
 	last_used_timetable_card: Option<String>,
-	dice_result: Option<usize>,
+	dice_result: Option<u8>,
 	event_card_bought: bool,
 	winning_team: Option<String>,
 	win_condition: Option<String>,
@@ -97,6 +97,10 @@ impl Game {
 			return Err(Box::new(crate::CustomError::InvalidGameState));
 		}
 
+		self.state = GameState::InProgress;
+		self.runner = Some(self.players.first().unwrap().clone());
+		self.current_turn = Some(self.players.first().unwrap().clone());
+
 		return Ok(());
 	}
 
@@ -128,7 +132,7 @@ struct Player {
 	display_name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Move {
 	player_id: PlayerId,
 	next_location: Option<String>,
@@ -141,7 +145,7 @@ pub struct Move {
 	finish_move: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct MoveResult {
 	coins_received: Option<usize>,
 	event_card_received: Option<String>,

@@ -33,6 +33,8 @@ pub async fn initialize_webserver() -> std::io::Result<()> {
 			})
 			.service(test)
 			.service(crate::game::rest_api::join_game)
+			.service(crate::game::rest_api::start_game)
+			.service(crate::game::rest_api::make_move)
 			.service(crate::game::rest_api::get_current_state)
 			.service(crate::game::rest_api::create_game);
 	})
