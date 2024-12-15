@@ -7,12 +7,13 @@ body:
 }
 ```
 
-returns game_id (UUIDv4) + invite_code
+returns game_id (UUIDv4) + invite_code and also the player_id for the host
 
 ```json
 {
 	"game_id": "2238db88-27d4-4a05-98bc-bd973934b83d",
 	"invite_code": "012-345",
+	"player_id": "ce710ab2-aebd-4fd3-aa7a-49f3b5d779ff",
 }
 ```
 
