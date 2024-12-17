@@ -98,8 +98,16 @@ impl Game {
 		}
 
 		self.state = GameState::InProgress;
-		self.runner = Some(self.players.first().unwrap().clone());
-		self.current_turn = Some(self.players.first().unwrap().clone());
+
+		let mut rng = thread_rng();
+		let rand_player_id = rng.gen_range(0..=self.players.len() - 1);
+
+		self.runner = Some(self.players.iter().nth(rand_player_id).unwrap().clone());
+		self.current_turn = Some(self.runner.clone().unwrap());
+
+		self.players.iter().for_each(|player| {
+			self.timetable_cards.insert(player.id, vec![draw_card(), draw_card(), draw_card(), draw_card(), draw_card()]);
+		});
 
 		return Ok(());
 	}
@@ -126,7 +134,7 @@ enum GameState {
 	Finished,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Player {
 	id: Uuid,
 	display_name: String,
@@ -152,4 +160,22 @@ pub struct MoveResult {
 	event_card_bought: bool,
 	runner_caught: bool,
 	timetable_cards_received: Vec<String>,
+}
+
+
+// There are the following number of cards in the real game:
+// low_speed:  50 = 50%
+// high_speed: 30 = 30%
+// plane:      16 = 16%
+// joker:       4 =  4%
+// total:     100 =100%
+fn draw_card() -> String {
+	let mut rng = thread_rng();
+
+	return match rng.gen_range(0..=100) {
+		0..=49  => "low_speed",
+		50..=79 => "high_speed",
+		80..=96 => "plane",
+		_ => "joker",
+	}.to_string();
 }
