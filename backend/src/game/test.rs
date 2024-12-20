@@ -189,30 +189,73 @@ mod start {
 			assert_eq!(x.1.len(), 5);
 		});
 	}
-}
-
-mod draw_card {
-	use super::*;
 
 	#[test]
-	fn is_random_enough() {
-		let n = 1_000_000;
+	fn card_stack_gets_filled() {
+		let mut game = Game::create("test_1".to_string());
+		let _ = game.join("test_2".to_string());
+		let _ = game.join("test_3".to_string());
+		let _ = game.start(game.host);
 
+		//85 because 100 - 3 players * 5 cards = 85
+		assert_eq!(game.card_stack.len(), 85);
+	}
+}
+
+mod generate_card_stack {
+	use super::*;
+
+#[test]
+	fn is_random_enough() {
+		let n = 1_000;
+
+		//check the first
 		let mut output: BTreeMap<String, usize> = BTreeMap::new();
 		for _ in 0..n {
-			output.entry(draw_card()).and_modify(|x| *x += 1).or_insert(1);
+			output.entry(generate_card_stack().first().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
 		}
 
-		assert!(*output.get("low_speed").unwrap() as f64 / n as f64 > 0.49);
-		assert!((*output.get("low_speed").unwrap() as f64 / n as f64) < 0.51);
+		assert!(*output.get("low_speed").unwrap() as f64 / n as f64 > 0.4);
+		assert!((*output.get("low_speed").unwrap() as f64 / n as f64) < 0.6);
 
-		assert!(*output.get("high_speed").unwrap() as f64 / n as f64 > 0.29);
-		assert!((*output.get("high_speed").unwrap() as f64 / n as f64) < 0.31);
+		assert!(*output.get("high_speed").unwrap() as f64 / n as f64 > 0.25);
+		assert!((*output.get("high_speed").unwrap() as f64 / n as f64) < 0.36);
 
-		assert!(*output.get("plane").unwrap() as f64 / n as f64 > 0.15);
-		assert!((*output.get("plane").unwrap() as f64 / n as f64) < 0.17);
+		assert!(*output.get("plane").unwrap() as f64 / n as f64 > 0.1);
+		assert!((*output.get("plane").unwrap() as f64 / n as f64) < 0.24);
 
-		assert!(*output.get("joker").unwrap() as f64 / n as f64 > 0.03);
-		assert!((*output.get("joker").unwrap() as f64 / n as f64) < 0.05);
+		assert!(*output.get("joker").unwrap() as f64 / n as f64 > 0.01);
+		assert!((*output.get("joker").unwrap() as f64 / n as f64) < 0.1);
+		
+		//and again the last
+		let mut output: BTreeMap<String, usize> = BTreeMap::new();
+		for _ in 0..n {
+			output.entry(generate_card_stack().pop().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
+		}
+
+		assert!(*output.get("low_speed").unwrap() as f64 / n as f64 > 0.4);
+		assert!((*output.get("low_speed").unwrap() as f64 / n as f64) < 0.6);
+
+		assert!(*output.get("high_speed").unwrap() as f64 / n as f64 > 0.25);
+		assert!((*output.get("high_speed").unwrap() as f64 / n as f64) < 0.36);
+
+		assert!(*output.get("plane").unwrap() as f64 / n as f64 > 0.1);
+		assert!((*output.get("plane").unwrap() as f64 / n as f64) < 0.24);
+
+		assert!(*output.get("joker").unwrap() as f64 / n as f64 > 0.01);
+		assert!((*output.get("joker").unwrap() as f64 / n as f64) < 0.1);
+
+		//ok that should be good enough I guess
+	}
+
+	#[test]
+	fn card_stack_contains_right_amount_of_each() {
+		let res = generate_card_stack();
+		
+		assert_eq!(res.len(), 100);
+		assert_eq!(res.iter().filter(|x| **x == "low_speed".to_string()).count(), 50);
+		assert_eq!(res.iter().filter(|x| **x == "high_speed".to_string()).count(), 30);
+		assert_eq!(res.iter().filter(|x| **x == "plane".to_string()).count(), 16);
+		assert_eq!(res.iter().filter(|x| **x == "joker".to_string()).count(), 4);
 	}
 }

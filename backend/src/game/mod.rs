@@ -31,6 +31,7 @@ pub struct Game {
 	win_condition: Option<String>,
 	runner_path: Vec<String>,
 	in_progress_move: Option<Move>,
+	card_stack: Vec<String>,
 }
 
 impl Game {
@@ -65,6 +66,7 @@ impl Game {
 			win_condition: None,
 			runner_path: Vec::new(),
 			in_progress_move: None,
+			card_stack: Vec::new(),
 		}
 	}
 
@@ -105,8 +107,10 @@ impl Game {
 		self.runner = Some(self.players.iter().nth(rand_player_id).unwrap().clone());
 		self.current_turn = Some(self.runner.clone().unwrap());
 
+		self.card_stack = generate_card_stack();
+
 		self.players.iter().for_each(|player| {
-			self.timetable_cards.insert(player.id, vec![draw_card(), draw_card(), draw_card(), draw_card(), draw_card()]);
+			self.timetable_cards.insert(player.id, vec![self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap()]);
 		});
 
 		return Ok(());
@@ -120,8 +124,6 @@ impl Game {
 		if self.in_progress_move.is_none() {
 			self.in_progress_move = Some(move_made);	
 		}
-
-
 
 		return Ok(MoveResult::default());
 	}
@@ -169,13 +171,24 @@ pub struct MoveResult {
 // plane:      16 = 16%
 // joker:       4 =  4%
 // total:     100 =100%
-fn draw_card() -> String {
+fn generate_card_stack() -> Vec<String> {
 	let mut rng = thread_rng();
+	let mut output: Vec<String> = Vec::new();
+	
+	for _ in 0..50 {
+		output.push("low_speed".to_string());
+	}
+	for _ in 0..30 {
+		output.push("high_speed".to_string());
+	}
+	for _ in 0..16 {
+		output.push("plane".to_string());
+	}
+	for _ in 0..4 {
+		output.push("joker".to_string());
+	}
 
-	return match rng.gen_range(0..=100) {
-		0..=49  => "low_speed",
-		50..=79 => "high_speed",
-		80..=96 => "plane",
-		_ => "joker",
-	}.to_string();
+	output.shuffle(&mut rng);
+
+	return output;
 }
