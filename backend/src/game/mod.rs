@@ -9,6 +9,7 @@ use std::error::Error;
 use rand::prelude::*;
 use crate::timetable_card::*;
 use crate::event_card::*;
+use crate::location::*;
 
 type GameId = Uuid;
 type PlayerId = Uuid;
