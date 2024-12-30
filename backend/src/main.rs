@@ -1,4 +1,6 @@
 mod game;
+mod timetable_card;
+mod event_card;
 mod rest_api;
 
 #[actix_web::main]
