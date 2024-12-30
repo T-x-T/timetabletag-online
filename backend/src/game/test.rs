@@ -198,7 +198,7 @@ mod start {
 		let _ = game.start(game.host);
 
 		//85 because 100 - 3 players * 5 cards = 85
-		assert_eq!(game.card_stack.len(), 85);
+		assert_eq!(game.timetable_card_stack.len(), 85);
 	}
 }
 
@@ -210,52 +210,52 @@ mod generate_card_stack {
 		let n = 1_000;
 
 		//check the first
-		let mut output: BTreeMap<String, usize> = BTreeMap::new();
+		let mut output: BTreeMap<TimetableCard, usize> = BTreeMap::new();
 		for _ in 0..n {
-			output.entry(generate_card_stack().first().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
+			output.entry(generate_timetable_card_stack().first().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
 		}
 
-		assert!(*output.get("low_speed").unwrap() as f64 / n as f64 > 0.4);
-		assert!((*output.get("low_speed").unwrap() as f64 / n as f64) < 0.6);
+		assert!(*output.get(&TimetableCard::LowSpeed).unwrap() as f64 / n as f64 > 0.4);
+		assert!((*output.get(&TimetableCard::LowSpeed).unwrap() as f64 / n as f64) < 0.6);
 
-		assert!(*output.get("high_speed").unwrap() as f64 / n as f64 > 0.25);
-		assert!((*output.get("high_speed").unwrap() as f64 / n as f64) < 0.36);
+		assert!(*output.get(&TimetableCard::HighSpeed).unwrap() as f64 / n as f64 > 0.25);
+		assert!((*output.get(&TimetableCard::HighSpeed).unwrap() as f64 / n as f64) < 0.36);
 
-		assert!(*output.get("plane").unwrap() as f64 / n as f64 > 0.1);
-		assert!((*output.get("plane").unwrap() as f64 / n as f64) < 0.24);
+		assert!(*output.get(&TimetableCard::Plane).unwrap() as f64 / n as f64 > 0.1);
+		assert!((*output.get(&TimetableCard::Plane).unwrap() as f64 / n as f64) < 0.24);
 
-		assert!(*output.get("joker").unwrap() as f64 / n as f64 > 0.01);
-		assert!((*output.get("joker").unwrap() as f64 / n as f64) < 0.1);
+		assert!(*output.get(&TimetableCard::Joker).unwrap() as f64 / n as f64 > 0.01);
+		assert!((*output.get(&TimetableCard::Joker).unwrap() as f64 / n as f64) < 0.1);
 		
 		//and again the last
-		let mut output: BTreeMap<String, usize> = BTreeMap::new();
+		let mut output: BTreeMap<TimetableCard, usize> = BTreeMap::new();
 		for _ in 0..n {
-			output.entry(generate_card_stack().pop().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
+			output.entry(generate_timetable_card_stack().pop().unwrap().clone()).and_modify(|x| *x += 1).or_insert(1);
 		}
 
-		assert!(*output.get("low_speed").unwrap() as f64 / n as f64 > 0.4);
-		assert!((*output.get("low_speed").unwrap() as f64 / n as f64) < 0.6);
+		assert!(*output.get(&TimetableCard::LowSpeed).unwrap() as f64 / n as f64 > 0.4);
+		assert!((*output.get(&TimetableCard::LowSpeed).unwrap() as f64 / n as f64) < 0.6);
 
-		assert!(*output.get("high_speed").unwrap() as f64 / n as f64 > 0.25);
-		assert!((*output.get("high_speed").unwrap() as f64 / n as f64) < 0.36);
+		assert!(*output.get(&TimetableCard::HighSpeed).unwrap() as f64 / n as f64 > 0.25);
+		assert!((*output.get(&TimetableCard::HighSpeed).unwrap() as f64 / n as f64) < 0.36);
 
-		assert!(*output.get("plane").unwrap() as f64 / n as f64 > 0.1);
-		assert!((*output.get("plane").unwrap() as f64 / n as f64) < 0.24);
+		assert!(*output.get(&TimetableCard::Plane).unwrap() as f64 / n as f64 > 0.1);
+		assert!((*output.get(&TimetableCard::Plane).unwrap() as f64 / n as f64) < 0.24);
 
-		assert!(*output.get("joker").unwrap() as f64 / n as f64 > 0.01);
-		assert!((*output.get("joker").unwrap() as f64 / n as f64) < 0.1);
+		assert!(*output.get(&TimetableCard::Joker).unwrap() as f64 / n as f64 > 0.01);
+		assert!((*output.get(&TimetableCard::Joker).unwrap() as f64 / n as f64) < 0.1);
 
 		//ok that should be good enough I guess
 	}
 
 	#[test]
 	fn card_stack_contains_right_amount_of_each() {
-		let res = generate_card_stack();
+		let res = generate_timetable_card_stack();
 		
 		assert_eq!(res.len(), 100);
-		assert_eq!(res.iter().filter(|x| **x == "low_speed".to_string()).count(), 50);
-		assert_eq!(res.iter().filter(|x| **x == "high_speed".to_string()).count(), 30);
-		assert_eq!(res.iter().filter(|x| **x == "plane".to_string()).count(), 16);
-		assert_eq!(res.iter().filter(|x| **x == "joker".to_string()).count(), 4);
+		assert_eq!(res.iter().filter(|x| **x == TimetableCard::LowSpeed).count(), 50);
+		assert_eq!(res.iter().filter(|x| **x == TimetableCard::HighSpeed).count(), 30);
+		assert_eq!(res.iter().filter(|x| **x == TimetableCard::Plane).count(), 16);
+		assert_eq!(res.iter().filter(|x| **x == TimetableCard::Joker).count(), 4);
 	}
 }

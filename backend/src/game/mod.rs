@@ -6,6 +6,7 @@ pub mod rest_api;
 use uuid::Uuid;
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::fmt::Display;
 use rand::prelude::*;
 
 type GameId = Uuid;
@@ -23,7 +24,7 @@ pub struct Game {
 	current_turn: Option<Player>,
 	coins_runner: usize,
 	coins_chasers: usize,
-	timetable_cards: BTreeMap<PlayerId, Vec<String>>,
+	timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>,
 	last_used_timetable_card: Option<String>,
 	dice_result: Option<u8>,
 	event_card_bought: bool,
@@ -31,7 +32,7 @@ pub struct Game {
 	win_condition: Option<String>,
 	runner_path: Vec<String>,
 	in_progress_move: Option<Move>,
-	card_stack: Vec<String>,
+	timetable_card_stack: Vec<TimetableCard>,
 }
 
 impl Game {
@@ -66,7 +67,7 @@ impl Game {
 			win_condition: None,
 			runner_path: Vec::new(),
 			in_progress_move: None,
-			card_stack: Vec::new(),
+			timetable_card_stack: Vec::new(),
 		}
 	}
 
@@ -98,21 +99,21 @@ impl Game {
 		if self.state != GameState::Lobby {
 			return Err(Box::new(crate::CustomError::InvalidGameState));
 		}
-
-		self.state = GameState::InProgress;
-
+		
 		let mut rng = thread_rng();
 		let rand_player_id = rng.gen_range(0..=self.players.len() - 1);
-
+		
 		self.runner = Some(self.players.iter().nth(rand_player_id).unwrap().clone());
 		self.current_turn = Some(self.runner.clone().unwrap());
-
-		self.card_stack = generate_card_stack();
-
+		
+		self.timetable_card_stack = generate_timetable_card_stack();
+		
 		self.players.iter().for_each(|player| {
-			self.timetable_cards.insert(player.id, vec![self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap(), self.card_stack.pop().unwrap()]);
+			self.timetable_cards.insert(player.id, vec![self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap()]);
 		});
+		
 
+		self.state = GameState::InProgress;
 		return Ok(());
 	}
 
@@ -165,27 +166,58 @@ pub struct MoveResult {
 }
 
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TimetableCard {
+	LowSpeed,
+	HighSpeed,
+	Plane,
+	Joker,
+}
+
+impl Display for TimetableCard {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			TimetableCard::LowSpeed => write!(f, "low_speed"),
+			TimetableCard::HighSpeed => write!(f, "high_speed"),
+			TimetableCard::Plane => write!(f, "plane"),
+			TimetableCard::Joker => write!(f, "joker"),
+		}
+	}
+}
+
+impl std::convert::From<String> for TimetableCard {
+	fn from(value: String) -> Self {
+		match value.as_str() {
+			"low_speed" => TimetableCard::LowSpeed,
+			"high_speed" => TimetableCard::HighSpeed,
+			"plane" => TimetableCard::Plane,
+			"joker" => TimetableCard::Joker,
+			_ => panic!("{value} not a valid TimetableCard ID"),
+		}
+	}
+}
+
 // There are the following number of cards in the real game:
 // low_speed:  50 = 50%
 // high_speed: 30 = 30%
 // plane:      16 = 16%
 // joker:       4 =  4%
 // total:     100 =100%
-fn generate_card_stack() -> Vec<String> {
+fn generate_timetable_card_stack() -> Vec<TimetableCard> {
 	let mut rng = thread_rng();
-	let mut output: Vec<String> = Vec::new();
+	let mut output: Vec<TimetableCard> = Vec::new();
 	
 	for _ in 0..50 {
-		output.push("low_speed".to_string());
+		output.push(TimetableCard::LowSpeed);
 	}
 	for _ in 0..30 {
-		output.push("high_speed".to_string());
+		output.push(TimetableCard::HighSpeed);
 	}
 	for _ in 0..16 {
-		output.push("plane".to_string());
+		output.push(TimetableCard::Plane);
 	}
 	for _ in 0..4 {
-		output.push("joker".to_string());
+		output.push(TimetableCard::Joker);
 	}
 
 	output.shuffle(&mut rng);

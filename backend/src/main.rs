@@ -2,9 +2,11 @@ mod game;
 mod rest_api;
 
 #[actix_web::main]
-async fn main() {
-  let _ = rest_api::initialize_webserver().await;
+async fn main() -> std::io::Result<()> {
+  rest_api::initialize_webserver().await?;
   println!("Hello, world!");
+
+  return Ok(());
 }
 
 #[derive(Debug, Clone)]
