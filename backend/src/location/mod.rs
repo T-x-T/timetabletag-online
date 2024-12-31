@@ -699,7 +699,7 @@ impl Display for Location {
 			Location::Rosslare => write!(f, "rosslare"),
 			Location::Belfast => write!(f, "belfast"),
 			Location::Cairnryan => write!(f, "cairnryan"),
-			Location::Glasgow => write!(f, "Glasgow"),
+			Location::Glasgow => write!(f, "glasgow"),
 			Location::Edinburgh => write!(f, "edinburgh"),
 			Location::Newcastle => write!(f, "newcastle"),
 			Location::York => write!(f, "york"),
@@ -814,7 +814,7 @@ impl Display for Location {
 			Location::Rijeka => write!(f, "rijeka"),
 			Location::Zagreb => write!(f, "zagreb"),
 			Location::Split => write!(f, "split"),
-			Location::BanjaLuka => write!(f, "banjaLuka"),
+			Location::BanjaLuka => write!(f, "banja_luka"),
 		}
 	}
 }
@@ -826,7 +826,7 @@ impl From<String> for Location {
 			"rosslare" => Location::Rosslare,
 			"belfast" => Location::Belfast,
 			"cairnryan" => Location::Cairnryan,
-			"Glasgow" => Location::Glasgow,
+			"glasgow" => Location::Glasgow,
 			"edinburgh" => Location::Edinburgh,
 			"newcastle" => Location::Newcastle,
 			"york" => Location::York,
@@ -941,7 +941,7 @@ impl From<String> for Location {
 			"rijeka" => Location::Rijeka,
 			"zagreb" => Location::Zagreb,
 			"split" => Location::Split,
-			"banjaLuka" => Location::BanjaLuka,
+			"banja_luka" => Location::BanjaLuka,
 			_ => panic!("{value} not a valid Location ID"),
 		}
 	}
