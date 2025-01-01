@@ -32,7 +32,7 @@ pub struct Game {
 	event_card_bought: bool,
 	winning_team: Option<String>,
 	win_condition: Option<String>,
-	runner_path: Vec<String>,
+	runner_path: Vec<Location>,
 	in_progress_move: Option<Move>,
 	timetable_card_stack: Vec<TimetableCard>,
 	event_card_stack: Vec<EventCard>,
@@ -49,6 +49,7 @@ impl Game {
 		let player = Player {
 			id: player_id.clone(),
 			display_name,
+			current_location: Location::Nancy,
 		};
 
 		return Self {
@@ -84,6 +85,7 @@ impl Game {
 		let player = Player {
 			id: id.clone(),
 			display_name,
+			current_location: Location::Nancy,
 		};
 
 		self.players.push(player);
@@ -128,7 +130,20 @@ impl Game {
 		}
 		
 		if self.in_progress_move.is_none() {
-			self.in_progress_move = Some(move_made);	
+			self.in_progress_move = Some(move_made.clone());
+		}
+
+
+		if move_made.finish_move {
+			self.in_progress_move = None;
+
+			//Write next player into self.current_turn
+			let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
+			if current_players_position == self.players.len() - 1 {
+				self.current_turn = self.players.first().cloned();
+			} else {
+				self.current_turn = self.players.iter().nth(current_players_position + 1).cloned();
+			}
 		}
 
 		return Ok(MoveResult::default());
@@ -146,9 +161,10 @@ enum GameState {
 struct Player {
 	id: Uuid,
 	display_name: String,
+	current_location: Location,
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, Default)]
 pub struct Move {
 	player_id: PlayerId,
 	next_location: Option<String>,

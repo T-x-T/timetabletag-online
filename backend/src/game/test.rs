@@ -211,3 +211,107 @@ mod start {
 		assert_eq!(game.event_card_stack.len(), 20);
 	}
 }
+
+mod make_move {
+	use super::*;
+
+	#[test]
+	fn returns_error_when_game_hasnt_started() {
+		let mut game = Game::create("test_1".to_string());
+		let _ = game.join("test_2".to_string());
+		let _ = game.join("test_3".to_string());
+
+		let move_made = Move {
+			player_id: game.host,
+			..Default::default()
+		};
+
+		let res = game.make_move(move_made);
+
+		assert!(res.is_err());
+		matches!(res.err().unwrap().downcast_ref::<crate::CustomError>(), Some(&crate::CustomError::NotYourTurn));
+	}
+
+	#[test]
+	fn returns_error_when_wrong_player_makes_turn() {
+		let mut game = Game::create("test_1".to_string());
+		let other_player = game.join("test_2".to_string()).unwrap();
+		let _ = game.join("test_3".to_string());
+		let _ = game.start(game.host);
+
+		println!("{game:?}");
+
+		let move_made = Move {
+			player_id: if game.current_turn.as_ref().unwrap().id == game.host {other_player} else {game.host},
+			..Default::default()
+		};
+
+		let res = game.make_move(move_made);
+
+		assert!(res.is_err());
+		matches!(res.err().unwrap().downcast_ref::<crate::CustomError>(), Some(&crate::CustomError::NotYourTurn));
+	}
+
+	#[test]
+	fn sets_in_progress_move_when_its_none() {
+		let mut game = Game::create("test_1".to_string());
+		let _ = game.join("test_2".to_string());
+		let _ = game.join("test_3".to_string());
+		let _ = game.start(game.host);
+
+		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+
+		let move_made = Move {
+			player_id: game.host,
+			..Default::default()
+		};
+
+		let _ = game.make_move(move_made);
+		assert!(game.in_progress_move.is_some());
+	}
+
+	#[test]
+	fn current_turn_gets_set_to_next_player_1() {
+		let mut game = Game::create("test_1".to_string());
+		let player2 = game.join("test_2".to_string());
+		let _ = game.join("test_3".to_string());
+		let _ = game.start(game.host);
+
+		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+
+		let _ = game.make_move(Move { player_id: game.host, finish_move: true, ..Default::default()});
+
+		assert_eq!(game.current_turn.unwrap().id, player2.unwrap());
+	}
+
+	#[test]
+	fn current_turn_gets_set_to_next_player_2() {
+		let mut game = Game::create("test_1".to_string());
+		let player2 = game.join("test_2".to_string()).unwrap();
+		let player3 = game.join("test_3".to_string()).unwrap();
+		let _ = game.start(game.host);
+
+		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+
+		let _ = game.make_move(Move { player_id: game.host, finish_move: true, ..Default::default()});
+		let _ = game.make_move(Move { player_id: player2, finish_move: true, ..Default::default()});
+
+		assert_eq!(game.current_turn.unwrap().id, player3);
+	}
+
+	#[test]
+	fn current_turn_gets_set_to_next_player_3() {
+		let mut game = Game::create("test_1".to_string());
+		let player2 = game.join("test_2".to_string()).unwrap();
+		let player3 = game.join("test_3".to_string()).unwrap();
+		let _ = game.start(game.host);
+
+		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+
+		let _ = game.make_move(Move { player_id: game.host, finish_move: true, ..Default::default()});
+		let _ = game.make_move(Move { player_id: player2, finish_move: true, ..Default::default()});
+		let _ = game.make_move(Move { player_id: player3, finish_move: true, ..Default::default()});
+
+		assert_eq!(game.current_turn.unwrap().id, game.host);
+	}
+}
