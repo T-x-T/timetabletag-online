@@ -4,7 +4,7 @@ use rand::prelude::*;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize)]
 pub enum TimetableCard {
 	LowSpeed,
 	HighSpeed,

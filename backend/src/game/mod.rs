@@ -33,7 +33,7 @@ pub struct Game {
 	winning_team: Option<String>,
 	win_condition: Option<String>,
 	runner_path: Vec<Location>,
-	in_progress_move: Option<Move>,
+	in_progress_move: Option<InProgressMove>,
 	timetable_card_stack: Vec<TimetableCard>,
 	event_card_stack: Vec<EventCard>,
 }
@@ -124,13 +124,67 @@ impl Game {
 		return Ok(());
 	}
 
-	pub fn make_move(&mut self, move_made: Move) -> Result<MoveResult, Box<dyn Error>> {
+	pub fn make_move(&mut self, mut move_made: Move) -> Result<MoveResult, Box<dyn Error>> {
 		if !self.current_turn.as_ref().is_some_and(|x| x.id == move_made.player_id) {
 			return Err(Box::new(crate::CustomError::NotYourTurn));
 		}
+
+		let player: &Player = self.players.iter().filter(|x| x.id == move_made.player_id).next().unwrap();
+
+		if move_made.next_location.is_some() {
+			move_made.next_location_parsed = Some(Location::from(move_made.next_location.clone().unwrap()));
+		}
+
+		if move_made.use_timetable_card.is_some() {
+			move_made.use_timetable_card_parsed = Some(TimetableCard::from(move_made.use_timetable_card.clone().unwrap()))
+		}
 		
 		if self.in_progress_move.is_none() {
-			self.in_progress_move = Some(move_made.clone());
+			self.in_progress_move = Some(InProgressMove {
+				move_data: move_made.clone(),
+				new_location_already_sent: move_made.next_location_parsed.is_some(),
+				use_timetable_card_already_sent: move_made.use_timetable_card_parsed.is_some(),
+			});
+		}
+
+		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() {
+			//TODO: check if player already moved this round
+
+			if !self.timetable_cards.get(&player.id).unwrap().contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
+				return Err(Box::new(crate::CustomError::MissingCard));
+			}
+
+			let current_location = &player.current_location;
+			match move_made.use_timetable_card_parsed.clone().unwrap() {
+				TimetableCard::LowSpeed => {
+					if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
+						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+					}
+				},
+				TimetableCard::HighSpeed => {
+					if !current_location.get_high_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
+						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+					}
+				},
+				TimetableCard::Plane => {
+					if !current_location.get_plane_connections().contains(&move_made.next_location_parsed.unwrap()) {
+						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+					}
+				},
+				TimetableCard::Joker => {
+					if !current_location.get_joker_connections().contains(&move_made.next_location_parsed.unwrap()) {
+						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+					}
+				},
+			}
+
+			//TODO: remove card
+
+			//TODO: add used card to stack
+
+			//TODO: actually move players location
+
+			//TODO: draw new card
 		}
 
 
@@ -168,13 +222,22 @@ struct Player {
 pub struct Move {
 	player_id: PlayerId,
 	next_location: Option<String>,
-	use_card: Option<String>,
+	next_location_parsed: Option<Location>,
+	use_timetable_card: Option<String>,
+	use_timetable_card_parsed: Option<TimetableCard>,
 	buy_event_card: bool,
 	use_event_card: Option<String>,
 	buy_powerup: Option<String>,
 	use_powerup: Option<String>,
 	throw_timetable_cards_away: Vec<String>,
 	finish_move: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct InProgressMove {
+	move_data: Move,
+	new_location_already_sent: bool,
+	use_timetable_card_already_sent: bool,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize)]

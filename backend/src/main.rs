@@ -19,6 +19,8 @@ pub enum CustomError {
   InvalidGameState,
   ActionNotAllowed,
   NotYourTurn,
+  InvalidNextLocation,
+  MissingCard,
 }
 
 impl std::fmt::Display for CustomError {
@@ -29,6 +31,8 @@ impl std::fmt::Display for CustomError {
       CustomError::InvalidGameState => write!(f, "the current game isn't in a state where this operation is allowed"),
       CustomError::ActionNotAllowed => write!(f, "you are not allowed to do what you just tried to do"),
       CustomError::NotYourTurn => write!(f, "it's not your turn"),
+      CustomError::InvalidNextLocation => write!(f, "you actually can't get to the chosen next location"),
+      CustomError::MissingCard => write!(f, "you don't have the card you're trying to play"),
     }
   }
 }

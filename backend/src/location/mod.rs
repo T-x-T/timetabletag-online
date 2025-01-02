@@ -3,7 +3,7 @@ use std::fmt::Display;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize)]
 pub enum Location {
 	//Ireland
 	Dublin,
@@ -397,7 +397,7 @@ impl Location {
 		}
 	}
 
-	fn get_plane_connections(&self) -> Vec<Location> {
+	pub fn get_plane_connections(&self) -> Vec<Location> {
 		match self {
 				Location::Dublin => vec![Location::Copenhagen, Location::London, Location::Paris],
 				Location::Rosslare => vec![],
@@ -522,7 +522,11 @@ impl Location {
 		}
 	}
 
-	fn is_coin_field(&self) -> bool {
+	pub fn get_joker_connections(&self) -> Vec<Location> {
+		return vec![self.get_low_speed_connections(), self.get_high_speed_connections(), self.get_plane_connections()].into_iter().flatten().collect();
+	}
+
+	pub fn is_coin_field(&self) -> bool {
 		match self {
 			Location::Edinburgh => true,
 			Location::Swansea => true,
@@ -549,7 +553,7 @@ impl Location {
 		}
 	}
 
-	fn is_event_field(&self) -> bool {
+	pub fn is_event_field(&self) -> bool {
 		match self {
 			Location::Holyhead => true,
 			Location::Andorra => true,
@@ -944,5 +948,11 @@ impl From<String> for Location {
 			"banja_luka" => Location::BanjaLuka,
 			_ => panic!("{value} not a valid Location ID"),
 		}
+	}
+}
+
+impl From<&str> for Location {
+	fn from(value: &str) -> Self {
+		return value.to_string().into();
 	}
 }
