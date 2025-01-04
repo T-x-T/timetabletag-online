@@ -27,7 +27,7 @@ pub struct Game {
 	coins_runner: usize,
 	coins_chasers: usize,
 	timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>,
-	last_used_timetable_card: Option<String>,
+	last_used_timetable_card: Option<TimetableCard>,
 	dice_result: Option<u8>,
 	event_card_bought: bool,
 	winning_team: Option<String>,
@@ -142,13 +142,15 @@ impl Game {
 		if self.in_progress_move.is_none() {
 			self.in_progress_move = Some(InProgressMove {
 				move_data: move_made.clone(),
-				new_location_already_sent: move_made.next_location_parsed.is_some(),
-				use_timetable_card_already_sent: move_made.use_timetable_card_parsed.is_some(),
+				new_location_already_sent: false,
+				use_timetable_card_already_sent: false,
 			});
 		}
 
 		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() {
-			//TODO: check if player already moved this round
+			if self.in_progress_move.as_ref().unwrap().new_location_already_sent {
+				return Err(Box::new(crate::CustomError::AlreadyMoved));
+			}
 
 			if !self.timetable_cards.get(&player.id).unwrap().contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
 				return Err(Box::new(crate::CustomError::MissingCard));
@@ -178,13 +180,34 @@ impl Game {
 				},
 			}
 
-			//TODO: remove card
+			let mut already_removed = false;
+			self.timetable_cards.entry(player.id).and_modify(|x| {
+				x.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
+					true
+				} else {
+					already_removed = true;
+					false
+				})
+			});
 
-			//TODO: add used card to stack
+			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
 
-			//TODO: actually move players location
+			if self.runner.as_ref().unwrap().id == player.id {
+				self.runner_path.push(move_made.next_location_parsed.unwrap());
+			}
 
-			//TODO: draw new card
+			//TODO: handle empty card stack
+			self.timetable_cards.entry(player.id).and_modify(|x| x.push(self.timetable_card_stack.pop().unwrap()));
+
+			self.players = self.players.clone().into_iter().map(|x| {
+				if x.id != player.id {
+					return x;
+				}
+				return Player {current_location: move_made.next_location_parsed.unwrap(), ..x };
+			}).collect();
+
+			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
+			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 		}
 
 

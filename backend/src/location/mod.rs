@@ -3,7 +3,7 @@ use std::fmt::Display;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, Copy)]
 pub enum Location {
 	//Ireland
 	Dublin,

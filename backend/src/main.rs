@@ -21,6 +21,7 @@ pub enum CustomError {
   NotYourTurn,
   InvalidNextLocation,
   MissingCard,
+  AlreadyMoved,
 }
 
 impl std::fmt::Display for CustomError {
@@ -33,6 +34,7 @@ impl std::fmt::Display for CustomError {
       CustomError::NotYourTurn => write!(f, "it's not your turn"),
       CustomError::InvalidNextLocation => write!(f, "you actually can't get to the chosen next location"),
       CustomError::MissingCard => write!(f, "you don't have the card you're trying to play"),
+      CustomError::AlreadyMoved => write!(f, "you already moved in your current turn"),
     }
   }
 }
