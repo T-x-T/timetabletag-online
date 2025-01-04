@@ -92,7 +92,6 @@ body:
 	"buy_event_card": true, //indicates that the player buys an event card
 	"use_event_card": "some_card_id", //event card that gets used for the turn
 	"buy_powerup": "power_up_id",
-	"use_powerup": "power_up_id",
 	"throw_timetable_cards_away": ["high_speed", "high_speed"], //max of two per round 
 	"finish_move": true, //indicates that the player has finished their turn
 }
