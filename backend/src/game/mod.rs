@@ -22,7 +22,7 @@ pub struct Game {
 	state: GameState,
 	runner: Option<Player>,
 	players: Vec<Player>,
-	destination: String,
+	destination: Location,
 	current_turn: Option<Player>,
 	coins_runner: usize,
 	coins_chasers: usize,
@@ -30,8 +30,8 @@ pub struct Game {
 	last_used_timetable_card: Option<TimetableCard>,
 	dice_result: Option<u8>,
 	event_card_bought: bool,
-	winning_team: Option<String>,
-	win_condition: Option<String>,
+	winning_team: Option<String>, //TODO: enum
+	win_condition: Option<String>, //TODO: enum
 	runner_path: Vec<Location>,
 	in_progress_move: Option<InProgressMove>,
 	timetable_card_stack: Vec<TimetableCard>,
@@ -187,8 +187,6 @@ impl Game {
 					return Err(Box::new(crate::CustomError::InvalidNextLocation));
 				}
 
-			//TODO: chaser win when catching runner
-
 			let mut already_removed = false;
 			self.timetable_cards.entry(player.id).and_modify(|x| {
 				x.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
@@ -199,10 +197,31 @@ impl Game {
 				})
 			});
 
+			if self.timetable_cards.get(&player.id).unwrap().is_empty() {
+				self.win_condition = Some("timetable_cards_ran_out".to_string());
+				self.winning_team = Some("chasers".to_string());
+
+				return Ok(MoveResult::default());
+			}
+
 			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
 
 			if self.runner.as_ref().unwrap().id == player.id {
 				self.runner_path.push(move_made.next_location_parsed.unwrap());
+
+				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
+					self.win_condition = Some("got_to_destination".to_string());
+					self.winning_team = Some("runner".to_string());
+
+					return Ok(MoveResult::default());
+				}
+			}
+
+			if move_made.next_location_parsed.unwrap() == self.runner.as_ref().unwrap().current_location {
+				self.win_condition = Some("runner_caught".to_string());
+				self.winning_team = Some("chasers".to_string());
+
+				return Ok(MoveResult::default());
 			}
 
 			if move_made.next_location_parsed.unwrap().is_coin_field() {
@@ -216,8 +235,9 @@ impl Game {
 				}
 			}
 
-			//TODO: handle empty card stack -> chasers win
-			self.timetable_cards.entry(player.id).and_modify(|x| x.push(self.timetable_card_stack.pop().unwrap()));
+			if !self.timetable_card_stack.is_empty() {
+				self.timetable_cards.entry(player.id).and_modify(|x| x.push(self.timetable_card_stack.pop().unwrap()));
+			}
 
 			self.players = self.players.clone().into_iter().map(|x| {
 				if x.id != player.id {
@@ -237,6 +257,7 @@ impl Game {
 		//TODO: use event card
 		//TODO: event card effects?
 		//TODO: runner wins when getting to their destination with at least 10 coins
+		//TODO: throwing up to two timetable cards away
 
 		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
 			return Err(Box::new(crate::CustomError::ActionNotAllowed));
@@ -256,6 +277,7 @@ impl Game {
 			}
 		}
 
+		//TODO: actually send move result
 		return Ok(MoveResult::default());
 	}
 }

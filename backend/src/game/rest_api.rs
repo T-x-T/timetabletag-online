@@ -80,7 +80,7 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 						GameState::Lobby => serde_json::to_string(&LobbyGameState {players: game.players.iter().map(|x| x.display_name.clone()).collect()}),
 						GameState::InProgress => serde_json::to_string(&InProgressGameState {
 							runner: game.runner.clone().unwrap().display_name,
-							destination: if query.player_id.is_some_and(|x| x == game.runner.clone().unwrap().id) {Some(game.destination.clone())} else {None},
+							destination: if query.player_id.is_some_and(|x| x == game.runner.clone().unwrap().id) {Some(game.destination.clone().to_string())} else {None},
 							current_turn: game.current_turn.clone().unwrap().display_name,
 							coins_runner: game.coins_runner,
 							coins_chasers: game.coins_chasers,
