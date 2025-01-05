@@ -180,6 +180,15 @@ impl Game {
 				},
 			}
 
+			if self.players.iter()
+				.filter(|x| x.id != self.runner.as_ref().unwrap().id)
+				.filter(|x| x.current_location == move_made.next_location_parsed.unwrap())
+				.count() > 0 {
+					return Err(Box::new(crate::CustomError::InvalidNextLocation));
+				}
+
+			//TODO: chaser win when catching runner
+
 			let mut already_removed = false;
 			self.timetable_cards.entry(player.id).and_modify(|x| {
 				x.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
@@ -196,7 +205,18 @@ impl Game {
 				self.runner_path.push(move_made.next_location_parsed.unwrap());
 			}
 
-			//TODO: handle empty card stack
+			if move_made.next_location_parsed.unwrap().is_coin_field() {
+				let mut rng = thread_rng();
+				let coins = rng.gen_range(1..=6);
+
+				if self.current_turn.as_ref().unwrap().id == self.runner.as_ref().unwrap().id {
+					self.coins_runner += coins;
+				} else {
+					self.coins_chasers += coins;
+				}
+			}
+
+			//TODO: handle empty card stack -> chasers win
 			self.timetable_cards.entry(player.id).and_modify(|x| x.push(self.timetable_card_stack.pop().unwrap()));
 
 			self.players = self.players.clone().into_iter().map(|x| {
@@ -209,6 +229,15 @@ impl Game {
 			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 		}
+
+		
+
+		//TODO: buy powerups
+		//TODO: buy event card when landing on event spot
+		//TODO: use event card
+		//TODO: event card effects?
+		//TODO: runner gets two turns in the beginning
+		//TODO: runner wins when getting to their destination with at least 10 coins
 
 
 		if move_made.finish_move {
@@ -251,7 +280,6 @@ pub struct Move {
 	buy_event_card: bool,
 	use_event_card: Option<String>,
 	buy_powerup: Option<String>,
-	use_powerup: Option<String>,
 	throw_timetable_cards_away: Vec<String>,
 	finish_move: bool,
 }
