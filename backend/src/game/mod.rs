@@ -236,19 +236,23 @@ impl Game {
 		//TODO: buy event card when landing on event spot
 		//TODO: use event card
 		//TODO: event card effects?
-		//TODO: runner gets two turns in the beginning
 		//TODO: runner wins when getting to their destination with at least 10 coins
 
-
+		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
+			return Err(Box::new(crate::CustomError::ActionNotAllowed));
+		}
+		
 		if move_made.finish_move {
 			self.in_progress_move = None;
 
 			//Write next player into self.current_turn
-			let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
-			if current_players_position == self.players.len() - 1 {
-				self.current_turn = self.players.first().cloned();
-			} else {
-				self.current_turn = self.players.iter().nth(current_players_position + 1).cloned();
+			if self.runner_path.len() != 1 {
+				let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
+				if current_players_position == self.players.len() - 1 {
+					self.current_turn = self.players.first().cloned();
+				} else {
+					self.current_turn = self.players.iter().nth(current_players_position + 1).cloned();
+				}
 			}
 		}
 
