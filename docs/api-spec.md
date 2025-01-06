@@ -40,6 +40,11 @@ the player_id is unique to the game and will identify the player. not to be shar
 POST /api/v1/games/{game_id}/start
 
 used to start the game, can only be called by the host
+```json
+{
+	"player_id": "ce710ab2-aebd-4fd3-aa7a-49f3b5d779ff",
+}
+```
 
 # get current game state
 GET /api/v1/games/{game_id}/current_state
