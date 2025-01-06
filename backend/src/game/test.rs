@@ -972,7 +972,8 @@ mod make_move {
 			let res = game.make_move(move_made);
 
 			assert!(res.is_ok());
-			assert_eq!(game.win_condition.unwrap(), "got_to_destination")
+			assert_eq!(game.win_condition.unwrap(), "got_to_destination");
+			assert_eq!(game.state, GameState::Finished);
 		}
 
 		#[test]
@@ -1005,6 +1006,7 @@ mod make_move {
 
 			assert_eq!(game.win_condition.unwrap(), "runner_caught".to_string());
 			assert_eq!(game.winning_team.unwrap(), "chasers".to_string());
+			assert_eq!(game.state, GameState::Finished);
 		}
 
 		#[test]
@@ -1037,6 +1039,7 @@ mod make_move {
 
 			assert_eq!(game.winning_team.unwrap(), "chasers".to_string());
 			assert_eq!(game.win_condition.unwrap(), "timetable_cards_ran_out".to_string());
+			assert_eq!(game.state, GameState::Finished);
 		}
 	}
 }

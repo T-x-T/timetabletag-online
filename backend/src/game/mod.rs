@@ -200,6 +200,7 @@ impl Game {
 			if self.timetable_cards.get(&player.id).unwrap().is_empty() {
 				self.win_condition = Some("timetable_cards_ran_out".to_string());
 				self.winning_team = Some("chasers".to_string());
+				self.state = GameState::Finished;
 
 				return Ok(MoveResult::default());
 			}
@@ -212,6 +213,7 @@ impl Game {
 				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
 					self.win_condition = Some("got_to_destination".to_string());
 					self.winning_team = Some("runner".to_string());
+					self.state = GameState::Finished;
 
 					return Ok(MoveResult::default());
 				}
@@ -220,6 +222,7 @@ impl Game {
 			if move_made.next_location_parsed.unwrap() == self.runner.as_ref().unwrap().current_location {
 				self.win_condition = Some("runner_caught".to_string());
 				self.winning_team = Some("chasers".to_string());
+				self.state = GameState::Finished;
 
 				return Ok(MoveResult::default());
 			}
@@ -256,7 +259,6 @@ impl Game {
 		//TODO: buy event card when landing on event spot
 		//TODO: use event card
 		//TODO: event card effects?
-		//TODO: runner wins when getting to their destination with at least 10 coins
 		//TODO: throwing up to two timetable cards away
 
 		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
