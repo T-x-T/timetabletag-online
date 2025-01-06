@@ -756,6 +756,29 @@ mod make_move {
 			assert!(res.is_err());
 			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::InvalidNextLocation.to_string());
 		}
+
+		#[test]
+		fn timetable_cards_received_gets_returned() {
+			let mut game = Game::create("test_1".to_string());
+			let _ = game.join("test_2".to_string());
+			let _ = game.join("test_3".to_string());
+			let _ = game.start(game.host);
+
+			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+
+			let move_made = Move {
+				player_id: game.host,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("paris".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert_eq!(res.timetable_cards_received, vec![TimetableCard::Joker]);
+		}
 	}
 
 	mod coin_fields {
@@ -907,6 +930,37 @@ mod make_move {
 			assert!(*output.get(&5).unwrap() > n / 7 && *output.get(&5).unwrap() < n / 5);
 			assert!(*output.get(&6).unwrap() > n / 7 && *output.get(&6).unwrap() < n / 5);
 		}
+
+
+		#[test]
+		fn number_of_received_coins_returned() {
+			let mut game = Game::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let _ = game.start(game.host);
+
+			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+			];
+
+			let move_made = Move {
+				player_id: game.host,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("le_havre".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert!(res.coins_received.unwrap() > 0);
+			assert_eq!(res.coins_received.unwrap(), game.coins_runner);
+		}
 	}
 
 	mod winning {
@@ -1007,6 +1061,37 @@ mod make_move {
 			assert_eq!(game.win_condition.unwrap(), "runner_caught".to_string());
 			assert_eq!(game.winning_team.unwrap(), "chasers".to_string());
 			assert_eq!(game.state, GameState::Finished);
+		}
+
+		#[test]
+		fn catching_runner_returns_runner_caught_true() {
+			let mut game = Game::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let _ = game.start(game.host);
+
+			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
+			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza });
+			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
+			game.destination = Location::Madrid;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+			];
+
+			let move_made = Move {
+				player_id: player2,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("zaragoza".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			assert!(res.unwrap().runner_caught);
 		}
 
 		#[test]

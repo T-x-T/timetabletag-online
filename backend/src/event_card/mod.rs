@@ -4,7 +4,7 @@ mod test;
 use std::fmt::Display;
 use rand::prelude::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
 pub enum EventCard {
 	GiveMeYourCards,
 	HuntedByMenForSport,

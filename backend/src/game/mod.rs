@@ -129,6 +129,8 @@ impl Game {
 			return Err(Box::new(crate::CustomError::NotYourTurn));
 		}
 
+		let mut move_result = MoveResult::default();
+
 		let player: &Player = self.players.iter().filter(|x| x.id == move_made.player_id).next().unwrap();
 
 		if move_made.next_location.is_some() {
@@ -202,7 +204,7 @@ impl Game {
 				self.winning_team = Some("chasers".to_string());
 				self.state = GameState::Finished;
 
-				return Ok(MoveResult::default());
+				return Ok(move_result);
 			}
 
 			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
@@ -215,7 +217,7 @@ impl Game {
 					self.winning_team = Some("runner".to_string());
 					self.state = GameState::Finished;
 
-					return Ok(MoveResult::default());
+					return Ok(move_result);
 				}
 			}
 
@@ -224,12 +226,16 @@ impl Game {
 				self.winning_team = Some("chasers".to_string());
 				self.state = GameState::Finished;
 
-				return Ok(MoveResult::default());
+				move_result.runner_caught = true;
+
+				return Ok(move_result);
 			}
 
 			if move_made.next_location_parsed.unwrap().is_coin_field() {
 				let mut rng = thread_rng();
 				let coins = rng.gen_range(1..=6);
+
+				move_result.coins_received = Some(coins);
 
 				if self.current_turn.as_ref().unwrap().id == self.runner.as_ref().unwrap().id {
 					self.coins_runner += coins;
@@ -239,7 +245,9 @@ impl Game {
 			}
 
 			if !self.timetable_card_stack.is_empty() {
-				self.timetable_cards.entry(player.id).and_modify(|x| x.push(self.timetable_card_stack.pop().unwrap()));
+				let timetable_card = self.timetable_card_stack.pop().unwrap();
+				move_result.timetable_cards_received = vec![timetable_card.clone()];
+				self.timetable_cards.entry(player.id).and_modify(|x| x.push(timetable_card));
 			}
 
 			self.players = self.players.clone().into_iter().map(|x| {
@@ -280,7 +288,7 @@ impl Game {
 		}
 
 		//TODO: actually send move result
-		return Ok(MoveResult::default());
+		return Ok(move_result);
 	}
 }
 
@@ -322,8 +330,8 @@ pub struct InProgressMove {
 #[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct MoveResult {
 	coins_received: Option<usize>,
-	event_card_received: Option<String>,
+	event_card_received: Option<EventCard>,
 	event_card_bought: bool,
 	runner_caught: bool,
-	timetable_cards_received: Vec<String>,
+	timetable_cards_received: Vec<TimetableCard>,
 }
