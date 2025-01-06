@@ -10,7 +10,7 @@ struct JoinGamePostBody {
 
 #[post("/api/v1/games")]
 pub async fn create_game(data: web::Data<AppState>, body: web::Json<JoinGamePostBody>) -> impl Responder {
-	let game = Game::create(body.display_name.clone());
+	let game = Lobby::create(body.display_name.clone());
 
 	match data.games.try_lock() {
 		Ok(mut games) => {
@@ -18,7 +18,7 @@ pub async fn create_game(data: web::Data<AppState>, body: web::Json<JoinGamePost
 			let invite_code = game.invite_code.clone();
 			let player_id = game.host;
 
-			games.insert(game_id.clone(), game);
+			games.insert(game_id.clone(), Game::Lobby(game));
 			return HttpResponse::Ok().body(format!("{{\"game_id\":\"{game_id}\",\"invite_code\":\"{invite_code}\",\"player_id\":\"{player_id}\"}}"));
 		},
 		Err(e) => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"{e}\"}}")),
@@ -29,15 +29,33 @@ pub async fn create_game(data: web::Data<AppState>, body: web::Json<JoinGamePost
 pub async fn join_game(data: web::Data<AppState>, body: web::Json<JoinGamePostBody>, invite_code: web::Path<String>) -> impl Responder {
 	match data.games.try_lock() {
 		Ok(mut games) => {
-			match games.iter().filter(|x| x.1.invite_code == invite_code.clone()).map(|x| x.1).next() {
+			match games.iter().filter(|x| {
+				match x.1 {
+					Game::Lobby(lobby) => lobby.invite_code == invite_code.clone(),
+					Game::InProgress(_) => false,
+					Game::Finished(_) => false,
+				}
+			}).map(|x| x.1).next() {
 				Some(game) => {
-					let game_id = game.id;
+					match game {
+						Game::Lobby(lobby) => {
+							let game_id = lobby.id;
 
-					let game = games.get_mut(&game_id).unwrap();
-					match game.join(body.display_name.clone()) {
-						Ok(player_id) => return HttpResponse::Ok().body(format!("{{\"game_id\":\"{game_id}\",\"player_id\":\"{player_id}\"}}")),
-						Err(e) => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"{e}\"}}")),
-					}
+							let game = games.get_mut(&game_id).unwrap();
+							match game {
+								Game::Lobby(lobby) => {
+									match lobby.join(body.display_name.clone()) {
+										Ok(player_id) => return HttpResponse::Ok().body(format!("{{\"game_id\":\"{game_id}\",\"player_id\":\"{player_id}\"}}")),
+										Err(e) => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"{e}\"}}")),
+									}
+								},
+								Game::InProgress(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+								Game::Finished(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+							}
+						},
+						Game::InProgress(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+						Game::Finished(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+					};
 				},
 				None => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"no game with invite code {invite_code} found\"}}")),
 			}
@@ -76,21 +94,21 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 		Ok(games) => {
 			match games.get(&game_id) {
 				Some(game) => {
-					let current_state_json = match game.state {
-						GameState::Lobby => serde_json::to_string(&LobbyGameState {players: game.players.iter().map(|x| x.display_name.clone()).collect()}),
-						GameState::InProgress => serde_json::to_string(&InProgressGameState {
-							runner: game.runner.clone().unwrap().display_name,
-							destination: if query.player_id.is_some_and(|x| x == game.runner.clone().unwrap().id) {Some(game.destination.clone().to_string())} else {None},
+					let current_state_json = match game {
+						Game::Lobby(game) => serde_json::to_string(&LobbyGameState {players: game.players.iter().map(|x| x.display_name.clone()).collect()}),
+						Game::InProgress(game) => serde_json::to_string(&InProgressGameState {
+							runner: game.runner.clone().display_name,
+							destination: if query.player_id.is_some_and(|x| x == game.runner.id) {Some(game.destination.clone().to_string())} else {None},
 							current_turn: game.current_turn.clone().unwrap().display_name,
 							coins_runner: game.coins_runner,
 							coins_chasers: game.coins_chasers,
 							your_timetable_cards: game.timetable_cards.get(&query.player_id.unwrap_or_default()).unwrap_or(&Vec::new()).clone().into_iter().map(|x| x.to_string()).collect(),
-							chaser_timetable_cards: game.timetable_cards.clone().into_iter().filter(|x| x.0 != game.runner.clone().unwrap().id).map(|x| (game.players.iter().filter(|y| y.id == x.0).next().unwrap().display_name.clone(), x.1.into_iter().map(|x| x.to_string()).collect())).collect(),
+							chaser_timetable_cards: game.timetable_cards.clone().into_iter().filter(|x| x.0 != game.runner.id).map(|x| (game.players.iter().filter(|y| y.id == x.0).next().unwrap().display_name.clone(), x.1.into_iter().map(|x| x.to_string()).collect())).collect(),
 							last_used_timetable_card: if game.last_used_timetable_card.is_some() {game.last_used_timetable_card.clone().unwrap().to_string()} else {String::new()},
 							dice_result: game.dice_result,
 							event_card_bought: game.event_card_bought,
 						}),
-						GameState::Finished => todo!(),
+						Game::Finished(game) => serde_json::to_string(game),
 					}.unwrap();
 					return HttpResponse::Ok().body(current_state_json);
 				},
@@ -111,10 +129,18 @@ pub async fn start_game(data: web::Data<AppState>, game_id: web::Path<Uuid>, bod
 		Ok(mut games) => {
 			match games.get_mut(&game_id) {
 				Some(game) => {
-					match game.start(body.player_id) {
-						Ok(res) => return HttpResponse::Ok().body(serde_json::to_string(&res).unwrap()),
-						Err(e) => return HttpResponse::from_error(e),
-					}
+					match game {
+						Game::Lobby(lobby) => {
+							match lobby.start(body.player_id) {
+								Ok(in_progress_game) => {
+									*game = Game::InProgress(in_progress_game);
+									return HttpResponse::Ok().body("")
+								},
+								Err(e) => return HttpResponse::from_error(e),
+						}},
+						Game::InProgress(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+						Game::Finished(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+					};
 				},
 				None => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"no game with id {game_id} found\"}}")),
 			}
@@ -129,10 +155,21 @@ pub async fn make_move(data: web::Data<AppState>, game_id: web::Path<Uuid>, body
 		Ok(mut games) => {
 			match games.get_mut(&game_id) {
 				Some(game) => {
-					match game.make_move(body.into_inner()) {
-						Ok(res) => return HttpResponse::Ok().body(serde_json::to_string(&res).unwrap()),
-						Err(e) => return HttpResponse::from_error(e),
-					}
+					match game {
+						Game::Lobby(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+						Game::InProgress(in_progress_game) => {
+							match in_progress_game.make_move(body.into_inner()) {
+								Ok(res) => {
+									if res.finished_game.is_some() {
+										*game = Game::Finished(res.clone().finished_game.unwrap());
+									}
+									return HttpResponse::Ok().body(serde_json::to_string(&res).unwrap())
+								},
+								Err(e) => return HttpResponse::from_error(e),
+							}
+						},
+						Game::Finished(_) => return HttpResponse::BadRequest().body("you cant do that while the game is in its current state"),
+					};
 				},
 				None => return HttpResponse::InternalServerError().body(format!("{{\"error\":\"no game with id {game_id} found\"}}")),
 			}

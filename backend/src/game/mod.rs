@@ -15,33 +15,23 @@ type GameId = Uuid;
 type PlayerId = Uuid;
 
 #[derive(Debug, Clone)]
-pub struct Game {
+pub enum Game {
+	Lobby(Lobby),
+	InProgress(InProgressGame),
+	Finished(FinishedGame),
+}
+
+#[derive(Debug, Clone)]
+pub struct Lobby {
 	id: GameId,
 	invite_code: String,
 	host: PlayerId,
-	state: GameState,
-	runner: Option<Player>,
 	players: Vec<Player>,
-	destination: Location,
-	current_turn: Option<Player>,
-	coins_runner: usize,
-	coins_chasers: usize,
-	timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>,
-	last_used_timetable_card: Option<TimetableCard>,
-	dice_result: Option<u8>,
-	event_card_bought: bool,
-	winning_team: Option<String>, //TODO: enum
-	win_condition: Option<String>, //TODO: enum
-	runner_path: Vec<Location>,
-	in_progress_move: Option<InProgressMove>,
-	timetable_card_stack: Vec<TimetableCard>,
-	event_card_stack: Vec<EventCard>,
 }
 
-impl Game {
+impl Lobby {
 	pub fn create(display_name: String) -> Self {
 		let mut rng = thread_rng();
-		let rand_destination_index = rng.gen_range(0..=4);
 		let invite_code_part1 = rng.gen_range(0..=999);
 		let invite_code_part2 = rng.gen_range(0..=999);
 
@@ -56,23 +46,7 @@ impl Game {
 			id: GameId::new_v4(),
 			invite_code: format!("{invite_code_part1:0>3}-{invite_code_part2:0>3}"), //TODO: collision possible
 			host: player_id,
-			state: GameState::Lobby,
-			runner: None,
 			players: vec![player],
-			destination: ["dublin", "copenhagen", "vienna", "rome", "madrid"].into_iter().nth(rand_destination_index).unwrap().into(),
-			current_turn: None,
-			coins_runner: 0,
-			coins_chasers: 0,
-			timetable_cards: BTreeMap::new(),
-			last_used_timetable_card: None,
-			dice_result: None,
-			event_card_bought: false,
-			winning_team: None,
-			win_condition: None,
-			runner_path: Vec::new(),
-			in_progress_move: None,
-			timetable_card_stack: Vec::new(),
-			event_card_stack: Vec::new(),
 		}
 	}
 
@@ -93,7 +67,7 @@ impl Game {
 		return Ok(id);
 	}
 
-	pub fn start(&mut self, player_id: PlayerId) -> Result<(), Box<dyn Error>> {
+	pub fn start(&mut self, player_id: PlayerId) -> Result<InProgressGame, Box<dyn Error>> {
 		if player_id != self.host {
 			return Err(Box::new(crate::CustomError::ActionNotAllowed));
 		}
@@ -101,29 +75,61 @@ impl Game {
 		if self.players.len() <= 2 {
 			return Err(Box::new(crate::CustomError::LobbyNotFullEnough));
 		}
-
-		if self.state != GameState::Lobby {
-			return Err(Box::new(crate::CustomError::InvalidGameState));
-		}
 		
 		let mut rng = thread_rng();
 		let rand_player_id = rng.gen_range(0..=self.players.len() - 1);
-		
-		self.runner = Some(self.players.iter().nth(rand_player_id).unwrap().clone());
-		self.current_turn = Some(self.runner.clone().unwrap());
-		
-		self.timetable_card_stack = generate_timetable_card_stack();
+		let rand_destination_index = rng.gen_range(0..=4);
+
+		let runner = self.players.iter().nth(rand_player_id).unwrap().clone();
+
+		let mut game = InProgressGame {
+			id: self.id,
+			host: self.host,
+			runner: runner.clone(),
+			players: self.players.clone(),
+			destination: ["dublin", "copenhagen", "vienna", "rome", "madrid"].into_iter().nth(rand_destination_index).unwrap().into(),
+			current_turn: Some(runner),
+			coins_runner: 0,
+			coins_chasers: 0,
+			timetable_cards: BTreeMap::new(),
+			last_used_timetable_card: None,
+			dice_result: None,
+			event_card_bought: false,
+			runner_path: vec![],
+			in_progress_move: None,
+			timetable_card_stack: generate_timetable_card_stack(),
+			event_card_stack: generate_event_card_stack(),
+		};		
 
 		self.players.iter().for_each(|player| {
-			self.timetable_cards.insert(player.id, vec![self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap(), self.timetable_card_stack.pop().unwrap()]);
-		});		
+			game.timetable_cards.insert(player.id, vec![game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap()]);
+		});
 
-		self.event_card_stack = generate_event_card_stack();
-
-		self.state = GameState::InProgress;
-		return Ok(());
+		return Ok(game);
 	}
+}
 
+#[derive(Debug, Clone)]
+pub struct InProgressGame {
+	id: GameId,
+	host: PlayerId,
+	runner: Player, //replace with just the players id?
+	players: Vec<Player>,
+	destination: Location,
+	current_turn: Option<Player>,
+	coins_runner: usize,
+	coins_chasers: usize,
+	timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>, //integrate into Player?
+	last_used_timetable_card: Option<TimetableCard>,
+	dice_result: Option<u8>,
+	event_card_bought: bool,
+	runner_path: Vec<Location>,
+	in_progress_move: Option<InProgressMove>,
+	timetable_card_stack: Vec<TimetableCard>,
+	event_card_stack: Vec<EventCard>,
+}
+
+impl InProgressGame {
 	pub fn make_move(&mut self, mut move_made: Move) -> Result<MoveResult, Box<dyn Error>> {
 		if !self.current_turn.as_ref().is_some_and(|x| x.id == move_made.player_id) {
 			return Err(Box::new(crate::CustomError::NotYourTurn));
@@ -183,7 +189,7 @@ impl Game {
 			}
 
 			if self.players.iter()
-				.filter(|x| x.id != self.runner.as_ref().unwrap().id)
+				.filter(|x| x.id != self.runner.id)
 				.filter(|x| x.current_location == move_made.next_location_parsed.unwrap())
 				.count() > 0 {
 					return Err(Box::new(crate::CustomError::InvalidNextLocation));
@@ -200,31 +206,60 @@ impl Game {
 			});
 
 			if self.timetable_cards.get(&player.id).unwrap().is_empty() {
-				self.win_condition = Some("timetable_cards_ran_out".to_string());
-				self.winning_team = Some("chasers".to_string());
-				self.state = GameState::Finished;
+				move_result.finished_game = Some(FinishedGame {
+					id: self.id,
+					host: self.host,
+					runner: self.runner.id,
+					players: self.players.clone(),
+					destination: self.destination,
+					coins_runner: self.coins_runner,
+					coins_chasers: self.coins_chasers,
+					winning_team: Team::Chaser,
+					win_condition: WinCondition::TimetableCardsRanOut,
+					runner_path: self.runner_path.clone(), 
+				});
 
 				return Ok(move_result);
 			}
 
 			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
 
-			if self.runner.as_ref().unwrap().id == player.id {
+			if self.runner.id == player.id {
 				self.runner_path.push(move_made.next_location_parsed.unwrap());
 
 				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
-					self.win_condition = Some("got_to_destination".to_string());
-					self.winning_team = Some("runner".to_string());
-					self.state = GameState::Finished;
+
+					move_result.finished_game = Some(FinishedGame {
+						id: self.id,
+						host: self.host,
+						runner: self.runner.id,
+						players: self.players.clone(),
+						destination: self.destination,
+						coins_runner: self.coins_runner,
+						coins_chasers: self.coins_chasers,
+						winning_team: Team::Runner,
+						win_condition: WinCondition::GotToDestination,
+						runner_path: self.runner_path.clone(), 
+					});
 
 					return Ok(move_result);
 				}
 			}
 
-			if move_made.next_location_parsed.unwrap() == self.runner.as_ref().unwrap().current_location {
-				self.win_condition = Some("runner_caught".to_string());
-				self.winning_team = Some("chasers".to_string());
-				self.state = GameState::Finished;
+			if move_made.next_location_parsed.unwrap() == self.runner.current_location {
+
+				move_result.finished_game = Some(FinishedGame {
+					id: self.id,
+					host: self.host,
+					runner: self.runner.id,
+					players: self.players.clone(),
+					destination: self.destination,
+					coins_runner: self.coins_runner,
+					coins_chasers: self.coins_chasers,
+					winning_team: Team::Chaser,
+					win_condition: WinCondition::RunnerCaught,
+					runner_path: self.runner_path.clone(), 
+				});
 
 				move_result.runner_caught = true;
 
@@ -237,7 +272,7 @@ impl Game {
 
 				move_result.coins_received = Some(coins);
 
-				if self.current_turn.as_ref().unwrap().id == self.runner.as_ref().unwrap().id {
+				if self.current_turn.as_ref().unwrap().id == self.runner.id {
 					self.coins_runner += coins;
 				} else {
 					self.coins_chasers += coins;
@@ -292,14 +327,21 @@ impl Game {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum GameState {
-	Lobby,
-	InProgress,
-	Finished,
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FinishedGame {
+	id: GameId,
+	host: PlayerId,
+	runner: PlayerId,
+	players: Vec<Player>,
+	destination: Location,
+	coins_runner: usize,
+	coins_chasers: usize,
+	winning_team: Team,
+	win_condition: WinCondition,
+	runner_path: Vec<Location>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 struct Player {
 	id: Uuid,
 	display_name: String,
@@ -334,4 +376,18 @@ pub struct MoveResult {
 	event_card_bought: bool,
 	runner_caught: bool,
 	timetable_cards_received: Vec<TimetableCard>,
+	finished_game: Option<FinishedGame>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub enum Team {
+	Runner,
+	Chaser,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub enum WinCondition {
+	RunnerCaught,
+	GotToDestination,
+	TimetableCardsRanOut,
 }

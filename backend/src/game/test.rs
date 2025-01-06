@@ -6,25 +6,10 @@ mod create {
 	#[test]
 	fn properly_adds_first_player() {
 		let display_name = "test".to_string();
-		let res = Game::create(display_name.clone());
+		let res = Lobby::create(display_name.clone());
 
 		assert_eq!(res.players.clone().first().unwrap().display_name, display_name);
 		assert_eq!(res.players.clone().first().unwrap().id, res.host);
-	}
-
-	#[test]
-	fn destination_random_enough() {
-		let n = 2_500; //passed 10k test runs with 2500, lower might be flakey
-
-		let mut output: BTreeMap<Location, usize> = BTreeMap::new();
-		for _ in 0..n {
-			let destination = Game::create(String::new()).destination;
-			output.entry(destination).and_modify(|x| *x += 1).or_insert(1);
-		}
-
-		assert_eq!(output.len(), 5);
-		assert!(output.iter().map(|x| *x.1).min().unwrap() > n / 6);
-		assert!(output.iter().map(|x| *x.1).max().unwrap() < n / 4);
 	}
 }
 
@@ -33,7 +18,7 @@ mod join {
 
 	#[test]
 	fn join_adds_2nd_player() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 
 		let player_id = game.join("test_2".to_string());
 
@@ -43,7 +28,7 @@ mod join {
 
 	#[test]
 	fn join_adds_3rd_player() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 
 		let player_id = game.join("test_3".to_string());
@@ -54,7 +39,7 @@ mod join {
 
 	#[test]
 	fn join_adds_4th_player() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
 
@@ -66,7 +51,7 @@ mod join {
 
 	#[test]
 	fn join_doesnt_add_5th_player() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
 		let _ = game.join("test_4".to_string());
@@ -83,7 +68,7 @@ mod start {
 
 	#[test]
 	fn start_with_3_players() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
 
@@ -94,7 +79,7 @@ mod start {
 
 	#[test]
 	fn start_with_4_players() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
 		let _ = game.join("test_4".to_string());
@@ -106,7 +91,7 @@ mod start {
 
 	#[test]
 	fn start_with_2_players_fails() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 
 		let res = game.start(game.host);
@@ -116,21 +101,8 @@ mod start {
 	}
 
 	#[test]
-	fn start_already_started_game_fails() {
-		let mut game = Game::create("test_1".to_string());
-		let _ = game.join("test_2".to_string());
-		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
-
-		let res = game.start(game.host);
-
-		assert!(res.is_err());
-		assert_eq!(res.err().unwrap().to_string(), crate::CustomError::InvalidGameState.to_string());
-	}
-
-	#[test]
 	fn other_player_cant_start() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let player = game.join("test_3".to_string());
 
@@ -141,27 +113,17 @@ mod start {
 	}
 
 	#[test]
-	fn set_state_to_in_progress() {
-		let mut game = Game::create("test_1".to_string());
-		let _ = game.join("test_2".to_string());
-		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
-		
-		assert_eq!(game.state, GameState::InProgress);
-	}
-
-	#[test]
 	fn set_runner_randomly() {
 		let n = 2_500; //passed 10k test runs with 2500, lower might be flakey
 
 		let mut output: BTreeMap<String, usize> = BTreeMap::new();
 		for _ in 0..n {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let game = game.start(game.host).unwrap();
 
-			output.entry(game.runner.unwrap().display_name).and_modify(|x| *x += 1).or_insert(1);
+			output.entry(game.runner.display_name).and_modify(|x| *x += 1).or_insert(1);
 		}
 
 		assert_eq!(output.len(), 3);
@@ -171,20 +133,20 @@ mod start {
 
 	#[test]
 	fn runner_gets_first_turn() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
+		let game = game.start(game.host).unwrap();
 		
-		assert_eq!(game.runner.unwrap(), game.current_turn.unwrap());
+		assert_eq!(game.runner, game.current_turn.unwrap());
 	}
 
 	#[test]
 	fn each_player_gets_5_cards() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
+		let game = game.start(game.host).unwrap();
 		
 		game.timetable_cards.into_iter().for_each(|x| {
 			assert_eq!(x.1.len(), 5);
@@ -193,10 +155,10 @@ mod start {
 
 	#[test]
 	fn timetable_card_stack_gets_filled() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
+		let game = game.start(game.host).unwrap();
 
 		//85 because 100 - 3 players * 5 cards = 85
 		assert_eq!(game.timetable_card_stack.len(), 85);
@@ -204,12 +166,31 @@ mod start {
 
 	#[test]
 	fn event_card_stack_gets_filled() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
+		let game = game.start(game.host).unwrap();
 
 		assert_eq!(game.event_card_stack.len(), 20);
+	}
+
+	#[test]
+	fn destination_random_enough() {
+		let n = 2_500; //passed 10k test runs with 2500, lower might be flakey
+
+		let mut output: BTreeMap<Location, usize> = BTreeMap::new();
+		for _ in 0..n {
+			let mut game = Lobby::create("test_1".to_string());
+			let _ = game.join("test_2".to_string());
+			let _ = game.join("test_3".to_string());
+			let game = game.start(game.host).unwrap();
+
+			output.entry(game.destination).and_modify(|x| *x += 1).or_insert(1);
+		}
+
+		assert_eq!(output.len(), 5);
+		assert!(output.iter().map(|x| *x.1).min().unwrap() > n / 6);
+		assert!(output.iter().map(|x| *x.1).max().unwrap() < n / 4);
 	}
 }
 
@@ -217,28 +198,11 @@ mod make_move {
 	use super::*;
 
 	#[test]
-	fn returns_error_when_game_hasnt_started() {
-		let mut game = Game::create("test_1".to_string());
-		let _ = game.join("test_2".to_string());
-		let _ = game.join("test_3".to_string());
-
-		let move_made = Move {
-			player_id: game.host,
-			..Default::default()
-		};
-
-		let res = game.make_move(move_made);
-
-		assert!(res.is_err());
-		assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotYourTurn.to_string());
-	}
-
-	#[test]
 	fn sets_in_progress_move_when_its_none() {
-		let mut game = Game::create("test_1".to_string());
+		let mut game = Lobby::create("test_1".to_string());
 		let _ = game.join("test_2".to_string());
 		let _ = game.join("test_3".to_string());
-		let _ = game.start(game.host);
+		let mut game = game.start(game.host).unwrap();
 
 		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
 
@@ -256,10 +220,10 @@ mod make_move {
 
 		#[test]
 		fn returns_error_when_wrong_player_makes_turn() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let other_player = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			println!("{game:?}");
 
@@ -276,10 +240,10 @@ mod make_move {
 
 		#[test]
 		fn current_turn_gets_set_to_next_player_1() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.timetable_cards = vec![
 				(game.host, vec![TimetableCard::LowSpeed; 5]),
@@ -304,10 +268,10 @@ mod make_move {
 	
 		#[test]
 		fn current_turn_gets_set_to_next_player_2() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.timetable_cards = vec![
 				(game.host, vec![TimetableCard::LowSpeed; 5]),
@@ -341,10 +305,10 @@ mod make_move {
 	
 		#[test]
 		fn current_turn_gets_set_to_next_player_3() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.timetable_cards = vec![
 				(game.host, vec![TimetableCard::LowSpeed; 5]),
@@ -387,13 +351,13 @@ mod make_move {
 
 		#[test]
 		fn runner_gets_two_turns_at_start() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::LowSpeed; 10];
 
@@ -422,13 +386,13 @@ mod make_move {
 
 		#[test]
 		fn returns_error_when_finishing_move_without_moving() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -448,13 +412,13 @@ mod make_move {
 
 		#[test]
 		fn next_location_gets_parsed_when_set() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 
 			let move_made = Move {
 				player_id: game.host,
@@ -469,13 +433,13 @@ mod make_move {
 
 		#[test]
 		fn use_timetable_card_gets_parsed_when_set() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -492,13 +456,13 @@ mod make_move {
 
 		#[test]
 		fn new_location_already_sent_gets_set_in_in_progress_move() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -515,13 +479,13 @@ mod make_move {
 
 		#[test]
 		fn use_timetable_card_already_sent_gets_set_in_in_progress_move() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 	
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -538,13 +502,13 @@ mod make_move {
 
 		#[test]
 		fn return_error_when_player_doesnt_have_right_timetable_card() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -561,13 +525,13 @@ mod make_move {
 
 		#[test]
 		fn returns_error_when_player_cant_get_to_next_location() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -584,13 +548,13 @@ mod make_move {
 
 		#[test]
 		fn returns_error_when_player_already_moved_this_round() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -616,13 +580,13 @@ mod make_move {
 
 		#[test]
 		fn player_location_get_updated() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -638,13 +602,13 @@ mod make_move {
 
 		#[test]
 		fn runner_path_gets_updated_for_runner() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -660,13 +624,13 @@ mod make_move {
 
 		#[test]
 		fn runner_path_doesnt_get_updated_for_chaser() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player1 = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player1, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -682,13 +646,13 @@ mod make_move {
 
 		#[test]
 		fn last_used_timetable_card_gets_updated() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -704,13 +668,13 @@ mod make_move {
 
 		#[test]
 		fn player_gets_new_card() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -722,23 +686,23 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.timetable_cards.get(&game.runner.clone().unwrap().id).unwrap().len(), 5);
-			assert_eq!(game.timetable_cards.get(&game.runner.unwrap().id).unwrap().iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
+			assert_eq!(game.timetable_cards.get(&game.runner.id).unwrap().len(), 5);
+			assert_eq!(game.timetable_cards.get(&game.runner.id).unwrap().iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
 		}
 
 		#[test]
 		fn chaser_cant_move_to_location_of_other_chaser() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let chaser1 = game.join("test_2".to_string()).unwrap();
 			let chaser2 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 10];
 
 			game.players = vec![
-				game.runner.clone().unwrap(),
+				game.runner.clone(),
 				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris },
 				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy },
 			];
@@ -759,13 +723,13 @@ mod make_move {
 
 		#[test]
 		fn timetable_cards_received_gets_returned() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string());
 			let _ = game.join("test_3".to_string());
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -786,13 +750,13 @@ mod make_move {
 
 		#[test]
 		fn runner_coins_get_updated_when_landing_on_coin_field() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -815,13 +779,13 @@ mod make_move {
 
 		#[test]
 		fn runner_coins_stay_zero_when_landing_on_non_coin_field() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let _ = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -838,13 +802,13 @@ mod make_move {
 
 		#[test]
 		fn chaser_coins_get_updated_when_landing_on_coin_field() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -868,13 +832,13 @@ mod make_move {
 
 		#[test]
 		fn chaser_coins_stay_zero_when_landing_on_non_coin_field() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let _ = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -895,13 +859,13 @@ mod make_move {
 			let n = 3_000;
 
 			for _ in 0..=n {
-				let mut game = Game::create("test_1".to_string());
+				let mut game = Lobby::create("test_1".to_string());
 				let player2 = game.join("test_2".to_string()).unwrap();
 				let player3 = game.join("test_3".to_string()).unwrap();
-				let _ = game.start(game.host);
+				let mut game = game.start(game.host).unwrap();
 	
 				game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-				game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+				game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 				game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 				game.timetable_card_stack = vec![TimetableCard::Joker];
 	
@@ -934,13 +898,13 @@ mod make_move {
 
 		#[test]
 		fn number_of_received_coins_returned() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -968,13 +932,13 @@ mod make_move {
 
 		#[test]
 		fn runner_doesnt_win_when_getting_to_dest_without_10_coins() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -994,18 +958,18 @@ mod make_move {
 			let res = game.make_move(move_made);
 
 			assert!(res.is_ok());
-			assert!(game.win_condition.is_none());
+			assert!(res.unwrap().finished_game.is_none());
 		}
 
 		#[test]
 		fn runner_wins_when_getting_to_dest_with_10_coins() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1026,19 +990,20 @@ mod make_move {
 			let res = game.make_move(move_made);
 
 			assert!(res.is_ok());
-			assert_eq!(game.win_condition.unwrap(), "got_to_destination");
-			assert_eq!(game.state, GameState::Finished);
+			assert!(res.as_ref().unwrap().finished_game.is_some());
+			assert_eq!(res.as_ref().unwrap().clone().finished_game.unwrap().win_condition, WinCondition::GotToDestination);
+			assert_eq!(res.unwrap().finished_game.unwrap().winning_team, Team::Runner);
 		}
 
 		#[test]
 		fn chasers_win_when_catching_runner() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1058,20 +1023,21 @@ mod make_move {
 			let res = game.make_move(move_made);
 			assert!(res.is_ok());
 
-			assert_eq!(game.win_condition.unwrap(), "runner_caught".to_string());
-			assert_eq!(game.winning_team.unwrap(), "chasers".to_string());
-			assert_eq!(game.state, GameState::Finished);
+			assert!(res.is_ok());
+			assert!(res.as_ref().unwrap().finished_game.is_some());
+			assert_eq!(res.as_ref().unwrap().clone().finished_game.unwrap().win_condition, WinCondition::RunnerCaught);
+			assert_eq!(res.unwrap().finished_game.unwrap().winning_team, Team::Chaser);
 		}
 
 		#[test]
 		fn catching_runner_returns_runner_caught_true() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1096,13 +1062,13 @@ mod make_move {
 
 		#[test]
 		fn chasers_win_when_card_stack_is_emptied() {
-			let mut game = Game::create("test_1".to_string());
+			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
 			let player3 = game.join("test_3".to_string()).unwrap();
-			let _ = game.start(game.host);
+			let mut game = game.start(game.host).unwrap();
 
 			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza });
+			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed]);
 			game.timetable_card_stack = vec![];
 			game.destination = Location::Madrid;
@@ -1120,11 +1086,11 @@ mod make_move {
 				..Default::default()
 			};
 			let res = game.make_move(move_made);
-			assert!(res.is_ok());
 
-			assert_eq!(game.winning_team.unwrap(), "chasers".to_string());
-			assert_eq!(game.win_condition.unwrap(), "timetable_cards_ran_out".to_string());
-			assert_eq!(game.state, GameState::Finished);
+			assert!(res.is_ok());
+			assert!(res.as_ref().unwrap().finished_game.is_some());
+			assert_eq!(res.as_ref().unwrap().clone().finished_game.unwrap().win_condition, WinCondition::TimetableCardsRanOut);
+			assert_eq!(res.unwrap().finished_game.unwrap().winning_team, Team::Chaser);
 		}
 	}
 }
