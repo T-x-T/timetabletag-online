@@ -4,10 +4,10 @@ use super::*;
 pub struct InProgressGame {
 	pub id: GameId,
 	pub host: PlayerId,
-	pub runner: Player, //replace with just the players id?
+	pub runner: PlayerId,
 	pub players: Vec<Player>,
 	pub destination: Location,
-	pub current_turn: Option<Player>,
+	pub current_turn: PlayerId,
 	pub coins_runner: usize,
 	pub coins_chasers: usize,
 	pub timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>, //integrate into Player?
@@ -22,7 +22,7 @@ pub struct InProgressGame {
 
 impl InProgressGame {
 	pub fn make_move(&mut self, mut move_made: Move) -> Result<MoveResult, Box<dyn Error>> {
-		if !self.current_turn.as_ref().is_some_and(|x| x.id == move_made.player_id) {
+		if move_made.player_id != self.current_turn {
 			return Err(Box::new(crate::CustomError::NotYourTurn));
 		}
 
@@ -80,7 +80,7 @@ impl InProgressGame {
 			}
 
 			if self.players.iter()
-				.filter(|x| x.id != self.runner.id)
+				.filter(|x| x.id != self.runner)
 				.filter(|x| x.current_location == move_made.next_location_parsed.unwrap())
 				.count() > 0 {
 					return Err(Box::new(crate::CustomError::InvalidNextLocation));
@@ -100,7 +100,7 @@ impl InProgressGame {
 				move_result.finished_game = Some(FinishedGame {
 					id: self.id,
 					host: self.host,
-					runner: self.runner.id,
+					runner: self.runner,
 					players: self.players.clone(),
 					destination: self.destination,
 					coins_runner: self.coins_runner,
@@ -115,7 +115,7 @@ impl InProgressGame {
 
 			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
 
-			if self.runner.id == player.id {
+			if self.runner == player.id {
 				self.runner_path.push(move_made.next_location_parsed.unwrap());
 
 				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
@@ -123,7 +123,7 @@ impl InProgressGame {
 					move_result.finished_game = Some(FinishedGame {
 						id: self.id,
 						host: self.host,
-						runner: self.runner.id,
+						runner: self.runner,
 						players: self.players.clone(),
 						destination: self.destination,
 						coins_runner: self.coins_runner,
@@ -137,12 +137,13 @@ impl InProgressGame {
 				}
 			}
 
-			if move_made.next_location_parsed.unwrap() == self.runner.current_location {
+			let runner_location = self.players.iter().filter(|x| x.id == self.runner).next().unwrap().current_location;
+			if move_made.next_location_parsed.unwrap() == runner_location {
 
 				move_result.finished_game = Some(FinishedGame {
 					id: self.id,
 					host: self.host,
-					runner: self.runner.id,
+					runner: self.runner,
 					players: self.players.clone(),
 					destination: self.destination,
 					coins_runner: self.coins_runner,
@@ -163,7 +164,7 @@ impl InProgressGame {
 
 				move_result.coins_received = Some(coins);
 
-				if self.current_turn.as_ref().unwrap().id == self.runner.id {
+				if self.current_turn == self.runner {
 					self.coins_runner += coins;
 				} else {
 					self.coins_chasers += coins;
@@ -206,9 +207,9 @@ impl InProgressGame {
 			if self.runner_path.len() != 1 {
 				let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
 				if current_players_position == self.players.len() - 1 {
-					self.current_turn = self.players.first().cloned();
+					self.current_turn = self.players.first().unwrap().id;
 				} else {
-					self.current_turn = self.players.iter().nth(current_players_position + 1).cloned();
+					self.current_turn = self.players.iter().nth(current_players_position + 1).unwrap().id;
 				}
 			}
 		}

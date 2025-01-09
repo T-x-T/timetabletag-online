@@ -59,15 +59,15 @@ impl Lobby {
 		let rand_player_id = rng.gen_range(0..=self.players.len() - 1);
 		let rand_destination_index = rng.gen_range(0..=4);
 
-		let runner = self.players.iter().nth(rand_player_id).unwrap().clone();
+		let runner = self.players.iter().nth(rand_player_id).unwrap().clone().id;
 
 		let mut game = InProgressGame {
 			id: self.id,
 			host: self.host,
-			runner: runner.clone(),
+			runner: runner,
 			players: self.players.clone(),
 			destination: ["dublin", "copenhagen", "vienna", "rome", "madrid"].into_iter().nth(rand_destination_index).unwrap().into(),
-			current_turn: Some(runner),
+			current_turn: runner,
 			coins_runner: 0,
 			coins_chasers: 0,
 			timetable_cards: BTreeMap::new(),

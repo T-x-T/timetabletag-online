@@ -124,7 +124,7 @@ mod start {
 			let _ = game.join("test_3".to_string());
 			let game = game.start(game.host).unwrap();
 
-			output.entry(game.runner.display_name).and_modify(|x| *x += 1).or_insert(1);
+			output.entry(game.players.iter().filter(|x| x.id == game.runner).next().unwrap().display_name.clone()).and_modify(|x| *x += 1).or_insert(1);
 		}
 
 		assert_eq!(output.len(), 3);
@@ -139,7 +139,7 @@ mod start {
 		let _ = game.join("test_3".to_string());
 		let game = game.start(game.host).unwrap();
 		
-		assert_eq!(game.runner, game.current_turn.unwrap());
+		assert_eq!(game.runner, game.current_turn);
 	}
 
 	#[test]
@@ -205,7 +205,7 @@ mod make_move {
 		let _ = game.join("test_3".to_string());
 		let mut game = game.start(game.host).unwrap();
 
-		game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+		game.current_turn = game.host;
 
 		let move_made = Move {
 			player_id: game.host,
@@ -229,7 +229,7 @@ mod make_move {
 			println!("{game:?}");
 
 			let move_made = Move {
-				player_id: if game.current_turn.as_ref().unwrap().id == game.host {other_player} else {game.host},
+				player_id: if game.current_turn == game.host {other_player} else {game.host},
 				..Default::default()
 			};
 
@@ -252,7 +252,7 @@ mod make_move {
 				(player3, vec![TimetableCard::LowSpeed; 5]),
 			].iter().cloned().collect();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
 
 			let move_made = Move {
@@ -264,7 +264,7 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.current_turn.unwrap().id, player2);
+			assert_eq!(game.current_turn, player2);
 		}
 	
 		#[test]
@@ -280,7 +280,7 @@ mod make_move {
 				(player3, vec![TimetableCard::LowSpeed; 5]),
 			].iter().cloned().collect();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
 
 			let move_made = Move {
@@ -301,7 +301,7 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.current_turn.unwrap().id, player3);
+			assert_eq!(game.current_turn, player3);
 		}
 	
 		#[test]
@@ -317,7 +317,7 @@ mod make_move {
 				(player3, vec![TimetableCard::LowSpeed; 5]),
 			].iter().cloned().collect();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
+			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
 
 			let move_made = Move {
@@ -347,7 +347,7 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.current_turn.unwrap().id, game.host);
+			assert_eq!(game.current_turn, game.host);
 		}
 
 		#[test]
@@ -357,8 +357,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::LowSpeed; 10];
 
@@ -382,7 +382,7 @@ mod make_move {
 			let res = game.make_move(move_made);
 			assert!(res.is_ok());
 
-			assert_eq!(game.current_turn.unwrap().id, player2);
+			assert_eq!(game.current_turn, player2);
 		}
 
 		#[test]
@@ -392,8 +392,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -418,8 +418,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 	
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -439,8 +439,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 	
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -462,8 +462,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 	
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -485,8 +485,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 	
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -508,8 +508,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -531,8 +531,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -554,8 +554,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -586,8 +586,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -608,8 +608,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -630,8 +630,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player1, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = player1;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -652,8 +652,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 
 			let move_made = Move {
@@ -674,8 +674,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -687,8 +687,8 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.timetable_cards.get(&game.runner.id).unwrap().len(), 5);
-			assert_eq!(game.timetable_cards.get(&game.runner.id).unwrap().iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
+			assert_eq!(game.timetable_cards.get(&game.runner).unwrap().len(), 5);
+			assert_eq!(game.timetable_cards.get(&game.runner).unwrap().iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
 		}
 
 		#[test]
@@ -698,17 +698,17 @@ mod make_move {
 			let chaser2 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 10];
 
 			game.players = vec![
-				game.runner.clone(),
+				Player { id: game.runner.clone(), display_name: "test_1".to_string(), current_location: Location::Nancy},
 				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris },
 				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy },
 			];
 
-			game.current_turn = Some(Player { id: chaser2, display_name: "test_2".to_string(), current_location: Location::Nancy });
+			game.current_turn = chaser2;
 			game.timetable_cards.insert(chaser2, vec![TimetableCard::LowSpeed; 5]);
 			let move_made = Move {
 				player_id: chaser2,
@@ -729,8 +729,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string());
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -756,8 +756,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -785,8 +785,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -808,8 +808,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = player2;
+			game.runner = game.host;
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -838,8 +838,8 @@ mod make_move {
 			let _ = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = player2;
+			game.runner = game.host;
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -865,8 +865,8 @@ mod make_move {
 				let player3 = game.join("test_3".to_string()).unwrap();
 				let mut game = game.start(game.host).unwrap();
 	
-				game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-				game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+				game.current_turn = game.host;
+				game.runner = game.host;
 				game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 				game.timetable_card_stack = vec![TimetableCard::Joker];
 	
@@ -904,8 +904,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
@@ -938,8 +938,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -969,8 +969,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy };
+			game.current_turn = game.host;
+			game.runner = game.host;
 			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1003,8 +1003,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
+			game.current_turn = player2;
+			game.runner = game.host;
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1037,8 +1037,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
+			game.current_turn = player2;
+			game.runner = game.host;
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
@@ -1068,8 +1068,8 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 
-			game.current_turn = Some(Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy });
-			game.runner = Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza };
+			game.current_turn = player2;
+			game.runner = game.runner;
 			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed]);
 			game.timetable_card_stack = vec![];
 			game.destination = Location::Madrid;
@@ -1083,7 +1083,7 @@ mod make_move {
 			let move_made = Move {
 				player_id: player2,
 				use_timetable_card: Some("low_speed".to_string()),
-				next_location: Some("zaragoza".to_string()),
+				next_location: Some("albacete".to_string()),
 				..Default::default()
 			};
 			let res = game.make_move(move_made);

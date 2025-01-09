@@ -97,13 +97,13 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 					let current_state_json = match game {
 						Game::Lobby(game) => serde_json::to_string(&LobbyGameState {players: game.players.iter().map(|x| x.display_name.clone()).collect()}),
 						Game::InProgress(game) => serde_json::to_string(&InProgressGameState {
-							runner: game.runner.clone().display_name,
-							destination: if query.player_id.is_some_and(|x| x == game.runner.id) {Some(game.destination.clone().to_string())} else {None},
-							current_turn: game.current_turn.clone().unwrap().display_name,
+							runner: game.players.iter().filter(|x| x.id == game.runner).next().unwrap().display_name.clone(),
+							destination: if query.player_id.is_some_and(|x| x == game.runner) {Some(game.destination.clone().to_string())} else {None},
+							current_turn: game.players.iter().filter(|x| x.id == game.current_turn).next().unwrap().display_name.clone(),
 							coins_runner: game.coins_runner,
 							coins_chasers: game.coins_chasers,
 							your_timetable_cards: game.timetable_cards.get(&query.player_id.unwrap_or_default()).unwrap_or(&Vec::new()).clone().into_iter().map(|x| x.to_string()).collect(),
-							chaser_timetable_cards: game.timetable_cards.clone().into_iter().filter(|x| x.0 != game.runner.id).map(|x| (game.players.iter().filter(|y| y.id == x.0).next().unwrap().display_name.clone(), x.1.into_iter().map(|x| x.to_string()).collect())).collect(),
+							chaser_timetable_cards: game.timetable_cards.clone().into_iter().filter(|x| x.0 != game.runner).map(|x| (game.players.iter().filter(|y| y.id == x.0).next().unwrap().display_name.clone(), x.1.into_iter().map(|x| x.to_string()).collect())).collect(),
 							last_used_timetable_card: if game.last_used_timetable_card.is_some() {game.last_used_timetable_card.clone().unwrap().to_string()} else {String::new()},
 							dice_result: game.dice_result,
 							event_card_bought: game.event_card_bought,
