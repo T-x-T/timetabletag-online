@@ -1,5 +1,6 @@
 use super::*;
 use super::lobby::Lobby;
+use super::in_progress_game::Move;
 
 mod create {
 	use super::*;
@@ -149,9 +150,7 @@ mod start {
 		let _ = game.join("test_3".to_string());
 		let game = game.start(game.host).unwrap();
 		
-		game.timetable_cards.into_iter().for_each(|x| {
-			assert_eq!(x.1.len(), 5);
-		});
+		game.players.into_iter().for_each(|x| assert_eq!(x.timetable_cards.len(), 5));
 	}
 
 	#[test]
@@ -243,14 +242,13 @@ mod make_move {
 		fn current_turn_gets_set_to_next_player_1() {
 			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
-			let player3 = game.join("test_3".to_string()).unwrap();
+			let _ = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.timetable_cards = vec![
-				(game.host, vec![TimetableCard::LowSpeed; 5]),
-				(player2, vec![TimetableCard::LowSpeed; 5]),
-				(player3, vec![TimetableCard::LowSpeed; 5]),
-			].iter().cloned().collect();
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
@@ -274,11 +272,10 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.timetable_cards = vec![
-				(game.host, vec![TimetableCard::LowSpeed; 5]),
-				(player2, vec![TimetableCard::LowSpeed; 5]),
-				(player3, vec![TimetableCard::LowSpeed; 5]),
-			].iter().cloned().collect();
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
@@ -311,11 +308,10 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.timetable_cards = vec![
-				(game.host, vec![TimetableCard::LowSpeed; 5]),
-				(player2, vec![TimetableCard::LowSpeed; 5]),
-				(player3, vec![TimetableCard::LowSpeed; 5]),
-			].iter().cloned().collect();
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			game.current_turn = game.host;
 			game.runner_path = vec![Location::Paris, Location::LeHavre];
@@ -359,7 +355,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 			game.timetable_card_stack = vec![TimetableCard::LowSpeed; 10];
 
 			let move_made = Move {
@@ -394,7 +393,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -441,7 +443,10 @@ mod make_move {
 	
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -464,7 +469,10 @@ mod make_move {
 	
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -487,7 +495,10 @@ mod make_move {
 	
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -510,7 +521,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -533,7 +547,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -556,7 +573,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -588,7 +608,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -610,7 +633,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -632,7 +658,10 @@ mod make_move {
 
 			game.current_turn = player1;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: player1,
@@ -654,7 +683,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 
 			let move_made = Move {
 				player_id: game.host,
@@ -676,7 +708,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			let move_made = Move {
@@ -687,8 +722,8 @@ mod make_move {
 			};
 			let _ = game.make_move(move_made);
 
-			assert_eq!(game.timetable_cards.get(&game.runner).unwrap().len(), 5);
-			assert_eq!(game.timetable_cards.get(&game.runner).unwrap().iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
+			assert_eq!(game.players.iter().find(|x| x.id == game.runner).unwrap().timetable_cards.len(), 5);
+			assert_eq!(game.players.iter().find(|x| x.id == game.runner).unwrap().timetable_cards.iter().filter(|x| **x == TimetableCard::Joker).count(), 1);
 		}
 
 		#[test]
@@ -699,17 +734,15 @@ mod make_move {
 			let mut game = game.start(game.host).unwrap();
 
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 10];
 
 			game.players = vec![
-				Player { id: game.runner.clone(), display_name: "test_1".to_string(), current_location: Location::Nancy},
-				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris },
-				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.runner.clone(), display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5]},
+				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			game.current_turn = chaser2;
-			game.timetable_cards.insert(chaser2, vec![TimetableCard::LowSpeed; 5]);
 			let move_made = Move {
 				player_id: chaser2,
 				use_timetable_card: Some("low_speed".to_string()),
@@ -731,7 +764,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			let move_made = Move {
@@ -758,13 +794,12 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -787,7 +822,10 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			let move_made = Move {
@@ -810,13 +848,12 @@ mod make_move {
 
 			game.current_turn = player2;
 			game.runner = game.host;
-			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -840,7 +877,10 @@ mod make_move {
 
 			game.current_turn = player2;
 			game.runner = game.host;
-			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			let move_made = Move {
@@ -867,13 +907,12 @@ mod make_move {
 	
 				game.current_turn = game.host;
 				game.runner = game.host;
-				game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 				game.timetable_card_stack = vec![TimetableCard::Joker];
 	
 				game.players = vec![
-					Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris },
-					Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
-					Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+					Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+					Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+					Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 				];
 	
 				let move_made = Move {
@@ -906,13 +945,12 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -940,14 +978,13 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -971,15 +1008,14 @@ mod make_move {
 
 			game.current_turn = game.host;
 			game.runner = game.host;
-			game.timetable_cards.entry(game.host).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
 			game.coins_runner = 10;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -1005,14 +1041,13 @@ mod make_move {
 
 			game.current_turn = player2;
 			game.runner = game.host;
-			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -1039,14 +1074,13 @@ mod make_move {
 
 			game.current_turn = player2;
 			game.runner = game.host;
-			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed; 5]);
 			game.timetable_card_stack = vec![TimetableCard::Joker; 5];
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
 			];
 
 			let move_made = Move {
@@ -1070,14 +1104,13 @@ mod make_move {
 
 			game.current_turn = player2;
 			game.runner = game.runner;
-			game.timetable_cards.entry(player2).and_modify(|x| *x = vec![TimetableCard::LowSpeed]);
 			game.timetable_card_stack = vec![];
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed] },
 			];
 
 			let move_made = Move {

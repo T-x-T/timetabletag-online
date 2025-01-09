@@ -102,8 +102,8 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 							current_turn: game.players.iter().filter(|x| x.id == game.current_turn).next().unwrap().display_name.clone(),
 							coins_runner: game.coins_runner,
 							coins_chasers: game.coins_chasers,
-							your_timetable_cards: game.timetable_cards.get(&query.player_id.unwrap_or_default()).unwrap_or(&Vec::new()).clone().into_iter().map(|x| x.to_string()).collect(),
-							chaser_timetable_cards: game.timetable_cards.clone().into_iter().filter(|x| x.0 != game.runner).map(|x| (game.players.iter().filter(|y| y.id == x.0).next().unwrap().display_name.clone(), x.1.into_iter().map(|x| x.to_string()).collect())).collect(),
+							your_timetable_cards: game.players.iter().find(|x| x.id == query.player_id.unwrap_or_default()).unwrap().timetable_cards.iter().map(|x| x.to_string()).collect(),
+							chaser_timetable_cards: game.players.iter().filter(|x| x.id != game.runner).map(|x| (x.display_name.clone(), x.timetable_cards.iter().map(|x| x.to_string()).collect())).collect(),
 							last_used_timetable_card: if game.last_used_timetable_card.is_some() {game.last_used_timetable_card.clone().unwrap().to_string()} else {String::new()},
 							dice_result: game.dice_result,
 							event_card_bought: game.event_card_bought,
@@ -150,7 +150,7 @@ pub async fn start_game(data: web::Data<AppState>, game_id: web::Path<Uuid>, bod
 }
 
 #[post("/api/v1/games/{game_id}/make_move")]
-pub async fn make_move(data: web::Data<AppState>, game_id: web::Path<Uuid>, body: web::Json<super::Move>) -> impl Responder {
+pub async fn make_move(data: web::Data<AppState>, game_id: web::Path<Uuid>, body: web::Json<crate::game::in_progress_game::Move>) -> impl Responder {
 	match data.games.try_lock() {
 		Ok(mut games) => {
 			match games.get_mut(&game_id) {

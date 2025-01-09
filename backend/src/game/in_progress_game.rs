@@ -10,7 +10,6 @@ pub struct InProgressGame {
 	pub current_turn: PlayerId,
 	pub coins_runner: usize,
 	pub coins_chasers: usize,
-	pub timetable_cards: BTreeMap<PlayerId, Vec<TimetableCard>>, //integrate into Player?
 	pub last_used_timetable_card: Option<TimetableCard>,
 	pub dice_result: Option<u8>,
 	pub event_card_bought: bool,
@@ -28,7 +27,7 @@ impl InProgressGame {
 
 		let mut move_result = MoveResult::default();
 
-		let player: &Player = self.players.iter().filter(|x| x.id == move_made.player_id).next().unwrap();
+		let player: Player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
 
 		if move_made.next_location.is_some() {
 			move_made.next_location_parsed = Some(Location::from(move_made.next_location.clone().unwrap()));
@@ -51,7 +50,7 @@ impl InProgressGame {
 				return Err(Box::new(crate::CustomError::AlreadyMoved));
 			}
 
-			if !self.timetable_cards.get(&player.id).unwrap().contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
+			if !self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
 				return Err(Box::new(crate::CustomError::MissingCard));
 			}
 
@@ -79,6 +78,7 @@ impl InProgressGame {
 				},
 			}
 
+			//Check if player wants to move to space occupied by a chaser
 			if self.players.iter()
 				.filter(|x| x.id != self.runner)
 				.filter(|x| x.current_location == move_made.next_location_parsed.unwrap())
@@ -86,17 +86,22 @@ impl InProgressGame {
 					return Err(Box::new(crate::CustomError::InvalidNextLocation));
 				}
 
+			//Remove used timetable card from player
 			let mut already_removed = false;
-			self.timetable_cards.entry(player.id).and_modify(|x| {
-				x.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
+			self.players = self.players.clone().into_iter().map(|mut x| {
+				if x.id != move_made.player_id{
+					return x;
+				}
+				x.timetable_cards.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
 					true
 				} else {
 					already_removed = true;
 					false
-				})
-			});
+				});
+				return x;
+			}).collect();
 
-			if self.timetable_cards.get(&player.id).unwrap().is_empty() {
+			if self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.is_empty() {
 				move_result.finished_game = Some(FinishedGame {
 					id: self.id,
 					host: self.host,
@@ -174,7 +179,13 @@ impl InProgressGame {
 			if !self.timetable_card_stack.is_empty() {
 				let timetable_card = self.timetable_card_stack.pop().unwrap();
 				move_result.timetable_cards_received = vec![timetable_card.clone()];
-				self.timetable_cards.entry(player.id).and_modify(|x| x.push(timetable_card));
+				
+				self.players = self.players.clone().into_iter().map(|mut x| {
+					if x.id == player.id {
+						x.timetable_cards.push(timetable_card.clone());
+					}
+					return x;
+				}).collect();
 			}
 
 			self.players = self.players.clone().into_iter().map(|x| {
@@ -217,4 +228,37 @@ impl InProgressGame {
 		//TODO: actually send move result
 		return Ok(move_result);
 	}
+}
+
+
+
+#[derive(Debug, Clone, serde::Deserialize, Default)]
+pub struct Move {
+	pub player_id: PlayerId,
+	pub next_location: Option<String>,
+	pub next_location_parsed: Option<Location>,
+	pub use_timetable_card: Option<String>,
+	pub use_timetable_card_parsed: Option<TimetableCard>,
+	pub buy_event_card: bool,
+	pub use_event_card: Option<String>,
+	pub buy_powerup: Option<String>,
+	pub throw_timetable_cards_away: Vec<String>,
+	pub finish_move: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct InProgressMove {
+	pub move_data: Move,
+	pub new_location_already_sent: bool,
+	pub use_timetable_card_already_sent: bool,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize)]
+pub struct MoveResult {
+	pub coins_received: Option<usize>,
+	pub event_card_received: Option<EventCard>,
+	pub event_card_bought: bool,
+	pub runner_caught: bool,
+	pub timetable_cards_received: Vec<TimetableCard>,
+	pub finished_game: Option<FinishedGame>,
 }

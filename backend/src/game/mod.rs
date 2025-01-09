@@ -32,37 +32,7 @@ pub struct Player {
 	id: Uuid,
 	display_name: String,
 	current_location: Location,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, Default)]
-pub struct Move {
-	player_id: PlayerId,
-	next_location: Option<String>,
-	next_location_parsed: Option<Location>,
-	use_timetable_card: Option<String>,
-	use_timetable_card_parsed: Option<TimetableCard>,
-	buy_event_card: bool,
-	use_event_card: Option<String>,
-	buy_powerup: Option<String>,
-	throw_timetable_cards_away: Vec<String>,
-	finish_move: bool,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct InProgressMove {
-	move_data: Move,
-	new_location_already_sent: bool,
-	use_timetable_card_already_sent: bool,
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize)]
-pub struct MoveResult {
-	coins_received: Option<usize>,
-	event_card_received: Option<EventCard>,
-	event_card_bought: bool,
-	runner_caught: bool,
-	timetable_cards_received: Vec<TimetableCard>,
-	finished_game: Option<FinishedGame>,
+	timetable_cards: Vec<TimetableCard>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]

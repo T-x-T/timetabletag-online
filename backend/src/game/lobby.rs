@@ -19,6 +19,7 @@ impl Lobby {
 			id: player_id.clone(),
 			display_name,
 			current_location: Location::Nancy,
+			timetable_cards: Vec::new(),
 		};
 
 		return Self {
@@ -39,6 +40,7 @@ impl Lobby {
 			id: id.clone(),
 			display_name,
 			current_location: Location::Nancy,
+			timetable_cards: Vec::new(),
 		};
 
 		self.players.push(player);
@@ -70,7 +72,6 @@ impl Lobby {
 			current_turn: runner,
 			coins_runner: 0,
 			coins_chasers: 0,
-			timetable_cards: BTreeMap::new(),
 			last_used_timetable_card: None,
 			dice_result: None,
 			event_card_bought: false,
@@ -80,9 +81,10 @@ impl Lobby {
 			event_card_stack: generate_event_card_stack(),
 		};		
 
-		self.players.iter().for_each(|player| {
-			game.timetable_cards.insert(player.id, vec![game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap()]);
-		});
+		game.players = self.players.clone().into_iter().map(|mut x| {
+			x.timetable_cards = vec![game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap(), game.timetable_card_stack.pop().unwrap()];
+			return x;
+		}).collect();
 
 		return Ok(game);
 	}
