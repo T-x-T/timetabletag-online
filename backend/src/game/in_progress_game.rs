@@ -78,43 +78,14 @@ impl InProgressGame {
 				},
 			}
 
-			//Check if player wants to move to space occupied by a chaser
-			if self.players.iter()
-				.filter(|x| x.id != self.runner)
-				.filter(|x| x.current_location == move_made.next_location_parsed.unwrap())
-				.count() > 0 {
-					return Err(Box::new(crate::CustomError::InvalidNextLocation));
-				}
+			if player_wants_to_move_space_occupied_by_chaser(&self.players, self.runner, move_made.next_location_parsed.unwrap()) {
+				return Err(Box::new(crate::CustomError::InvalidNextLocation));
+			}
 
-			//Remove used timetable card from player
-			let mut already_removed = false;
-			self.players = self.players.clone().into_iter().map(|mut x| {
-				if x.id != move_made.player_id{
-					return x;
-				}
-				x.timetable_cards.retain(|x| if x != move_made.use_timetable_card_parsed.as_ref().unwrap() || already_removed {
-					true
-				} else {
-					already_removed = true;
-					false
-				});
-				return x;
-			}).collect();
+			self.players = remove_used_timetable_card_from_player(self.players.clone(), move_made.player_id, move_made.use_timetable_card_parsed.as_ref().unwrap());
 
 			if self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.is_empty() {
-				move_result.finished_game = Some(FinishedGame {
-					id: self.id,
-					host: self.host,
-					runner: self.runner,
-					players: self.players.clone(),
-					destination: self.destination,
-					coins_runner: self.coins_runner,
-					coins_chasers: self.coins_chasers,
-					winning_team: Team::Chaser,
-					win_condition: WinCondition::TimetableCardsRanOut,
-					runner_path: self.runner_path.clone(), 
-				});
-
+				move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Chaser, WinCondition::TimetableCardsRanOut));
 				return Ok(move_result);
 			}
 
@@ -124,42 +95,15 @@ impl InProgressGame {
 				self.runner_path.push(move_made.next_location_parsed.unwrap());
 
 				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
-
-					move_result.finished_game = Some(FinishedGame {
-						id: self.id,
-						host: self.host,
-						runner: self.runner,
-						players: self.players.clone(),
-						destination: self.destination,
-						coins_runner: self.coins_runner,
-						coins_chasers: self.coins_chasers,
-						winning_team: Team::Runner,
-						win_condition: WinCondition::GotToDestination,
-						runner_path: self.runner_path.clone(), 
-					});
-
+					move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Runner, WinCondition::GotToDestination));
 					return Ok(move_result);
 				}
 			}
 
 			let runner_location = self.players.iter().filter(|x| x.id == self.runner).next().unwrap().current_location;
 			if move_made.next_location_parsed.unwrap() == runner_location {
-
-				move_result.finished_game = Some(FinishedGame {
-					id: self.id,
-					host: self.host,
-					runner: self.runner,
-					players: self.players.clone(),
-					destination: self.destination,
-					coins_runner: self.coins_runner,
-					coins_chasers: self.coins_chasers,
-					winning_team: Team::Chaser,
-					win_condition: WinCondition::RunnerCaught,
-					runner_path: self.runner_path.clone(), 
-				});
-
+				move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Chaser, WinCondition::RunnerCaught));
 				move_result.runner_caught = true;
-
 				return Ok(move_result);
 			}
 
@@ -261,4 +205,28 @@ pub struct MoveResult {
 	pub runner_caught: bool,
 	pub timetable_cards_received: Vec<TimetableCard>,
 	pub finished_game: Option<FinishedGame>,
+}
+
+
+fn player_wants_to_move_space_occupied_by_chaser(players: &Vec<Player>, runner: PlayerId, next_location: Location) -> bool {
+	return players.iter()
+		.filter(|x| x.id != runner)
+		.filter(|x| x.current_location == next_location)
+		.count() > 0;
+}
+
+fn remove_used_timetable_card_from_player(players: Vec<Player>, player_id: PlayerId, timetable_card_used: &TimetableCard) -> Vec<Player> {
+	let mut already_removed = false;
+	return players.into_iter().map(|mut x| {
+		if x.id != player_id{
+			return x;
+		}
+		x.timetable_cards.retain(|x| if x != timetable_card_used || already_removed {
+			true
+		} else {
+			already_removed = true;
+			false
+		});
+		return x;
+	}).collect();
 }
