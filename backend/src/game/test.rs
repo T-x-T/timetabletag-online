@@ -242,16 +242,17 @@ mod make_move {
 		fn current_turn_gets_set_to_next_player_1() {
 			let mut game = Lobby::create("test_1".to_string());
 			let player2 = game.join("test_2".to_string()).unwrap();
-			let _ = game.join("test_3".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.players = game.players.clone().into_iter().map(|mut x| {
-				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
-				return x;
-			}).collect();
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
 
 			game.current_turn = game.host;
-			game.runner_path = vec![Location::Paris, Location::LeHavre];
+			game.get_another_turn = false;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -260,8 +261,9 @@ mod make_move {
 				finish_move: true,
 				..Default::default()
 			};
-			let _ = game.make_move(move_made);
+			let res = game.make_move(move_made);
 
+			assert!(res.is_ok());
 			assert_eq!(game.current_turn, player2);
 		}
 	
@@ -272,13 +274,14 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.players = game.players.clone().into_iter().map(|mut x| {
-				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
-				return x;
-			}).collect();
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
 
 			game.current_turn = game.host;
-			game.runner_path = vec![Location::Paris, Location::LeHavre];
+			game.get_another_turn = false;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -308,13 +311,14 @@ mod make_move {
 			let player3 = game.join("test_3".to_string()).unwrap();
 			let mut game = game.start(game.host).unwrap();
 	
-			game.players = game.players.clone().into_iter().map(|mut x| {
-				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
-				return x;
-			}).collect();
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
 
 			game.current_turn = game.host;
-			game.runner_path = vec![Location::Paris, Location::LeHavre];
+			game.get_another_turn = false;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -1127,4 +1131,234 @@ mod make_move {
 			assert_eq!(res.unwrap().finished_game.unwrap().winning_team, Team::Chaser);
 		}
 	}
+
+	mod powerup {
+		use super::*;
+
+		#[test]
+		fn buying_runner_country_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_country".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert_eq!(res.power_up_status.runner_country.unwrap(), Country::Italy);
+		}
+
+		#[test]
+		fn buying_runner_country_doesnt_work_when_too_few_coins() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 4;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_country".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotEnoughCoins.to_string());
+		}
+
+		#[test]
+		fn buying_runner_country_doesnt_work_when_too_few_coins_for_three_chasers() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let player4 = game.join("test_4".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 9;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player4, display_name: "test_4".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_country".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotEnoughCoins.to_string());
+		}
+
+		#[test]
+		fn buying_runner_country_doesnt_do_anything_when_runner_buys_it() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_country".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert!(res.power_up_status.runner_country.is_none());
+		}
+
+		#[test]
+		fn buying_runner_location_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 10;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_location".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert_eq!(res.power_up_status.runner_location.unwrap(), Location::Padua);
+		}
+
+		#[test]
+		fn buying_chaser_two_turns_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 100;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("chaser_gets_two_turns".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+			assert!(res.power_up_status.get_another_turn);
+			assert!(game.get_another_turn);
+
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("paris".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			assert_eq!(game.current_turn, player2);
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("le_havre".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(!game.get_another_turn);
+			assert!(res.is_ok());
+			assert_eq!(game.current_turn, player3);
+		}
+
+		#[test]
+		fn buying_runner_destination_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.destination = Location::Dublin;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 100;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_powerup: Some("learn_runner_destination".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert_eq!(res.power_up_status.runner_destination.unwrap(), Location::Dublin);
+		}
+	}
+
+
 }

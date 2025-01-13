@@ -81,6 +81,10 @@ struct InProgressGameState {
 	last_used_timetable_card: String,
 	dice_result: Option<u8>,
 	event_card_bought: bool,
+	runner_current_country: String,
+	runner_current_location: String,
+	runner_destination: String,
+	chaser_gets_another_turn: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -107,6 +111,10 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 							last_used_timetable_card: if game.last_used_timetable_card.is_some() {game.last_used_timetable_card.clone().unwrap().to_string()} else {String::new()},
 							dice_result: game.dice_result,
 							event_card_bought: game.event_card_bought,
+							runner_current_country: if game.power_up_status.runner_country.is_some() {game.power_up_status.runner_country.unwrap().to_string()} else {String::default()},
+							runner_current_location: if game.power_up_status.runner_location.is_some() {game.power_up_status.runner_location.unwrap().to_string()} else {String::default()},
+							runner_destination: if game.power_up_status.runner_destination.is_some() {game.power_up_status.runner_destination.unwrap().to_string()} else {String::default()},
+							chaser_gets_another_turn: game.power_up_status.get_another_turn,
 						}),
 						Game::Finished(game) => serde_json::to_string(game),
 					}.unwrap();

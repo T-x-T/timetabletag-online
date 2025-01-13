@@ -16,6 +16,7 @@ use crate::location::*;
 use lobby::Lobby;
 use in_progress_game::InProgressGame;
 use finished_game::FinishedGame;
+use crate::powerup::*;
 
 type GameId = Uuid;
 type PlayerId = Uuid;

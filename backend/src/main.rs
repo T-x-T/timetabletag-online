@@ -3,6 +3,7 @@ mod timetable_card;
 mod event_card;
 mod location;
 mod rest_api;
+mod powerup;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -22,6 +23,7 @@ pub enum CustomError {
   InvalidNextLocation,
   MissingCard,
   AlreadyMoved,
+  NotEnoughCoins,
 }
 
 impl std::fmt::Display for CustomError {
@@ -35,6 +37,7 @@ impl std::fmt::Display for CustomError {
       CustomError::InvalidNextLocation => write!(f, "you actually can't get to the chosen next location"),
       CustomError::MissingCard => write!(f, "you don't have the card you're trying to play"),
       CustomError::AlreadyMoved => write!(f, "you already moved in your current turn"),
+      CustomError::NotEnoughCoins => write!(f, "you don't have enough coins"),
     }
   }
 }

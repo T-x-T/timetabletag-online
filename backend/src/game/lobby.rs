@@ -66,7 +66,7 @@ impl Lobby {
 		let mut game = InProgressGame {
 			id: self.id,
 			host: self.host,
-			runner: runner,
+			runner,
 			players: self.players.clone(),
 			destination: ["dublin", "copenhagen", "vienna", "rome", "madrid"].into_iter().nth(rand_destination_index).unwrap().into(),
 			current_turn: runner,
@@ -79,6 +79,8 @@ impl Lobby {
 			in_progress_move: None,
 			timetable_card_stack: generate_timetable_card_stack(),
 			event_card_stack: generate_event_card_stack(),
+			power_up_status: PowerupStatus::default(),
+			get_another_turn: true,
 		};		
 
 		game.players = self.players.clone().into_iter().map(|mut x| {

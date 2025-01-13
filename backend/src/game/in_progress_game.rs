@@ -17,6 +17,8 @@ pub struct InProgressGame {
 	pub in_progress_move: Option<InProgressMove>,
 	pub timetable_card_stack: Vec<TimetableCard>,
 	pub event_card_stack: Vec<EventCard>,
+	pub power_up_status: PowerupStatus,
+	pub get_another_turn: bool,
 }
 
 impl InProgressGame {
@@ -144,13 +146,39 @@ impl InProgressGame {
 		}
 
 		
+		if move_made.buy_powerup.is_some() && player.id != self.runner {
+			let powerup: Powerup = move_made.buy_powerup.unwrap().as_str().into();
 
-		//TODO: buy powerups
+			if self.coins_chasers < powerup.get_price(self.players.len() - 1) {
+				return Err(Box::new(crate::CustomError::NotEnoughCoins));
+			}
+
+			self.coins_chasers -= powerup.get_price(self.players.len() - 1);
+
+			match powerup {
+				Powerup::LearnRunnerCountry => {
+					move_result.power_up_status.runner_country = Some(self.players.iter().find(|x| x.id == self.runner).unwrap().current_location.into());
+				},
+				Powerup::LearnRunnerLocation => {
+					move_result.power_up_status.runner_location = Some(self.players.iter().find(|x| x.id == self.runner).unwrap().current_location);
+				},
+				Powerup::ChaserGetsTwoTurns => {
+					move_result.power_up_status.get_another_turn = true;
+					self.get_another_turn = true;
+				},
+				Powerup::LearnRunnerDestination => {
+					move_result.power_up_status.runner_destination = Some(self.destination);
+				},
+			};
+
+			self.power_up_status = move_result.power_up_status.clone(); //TODO: return this to all players in get game_state api call
+		}
+
 		//TODO: buy event card when landing on event spot
 		//TODO: use event card
 		//TODO: event card effects?
 		//TODO: throwing up to two timetable cards away
-
+ 
 		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
 			return Err(Box::new(crate::CustomError::ActionNotAllowed));
 		}
@@ -159,7 +187,7 @@ impl InProgressGame {
 			self.in_progress_move = None;
 
 			//Write next player into self.current_turn
-			if self.runner_path.len() != 1 {
+			if !self.get_another_turn {
 				let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
 				if current_players_position == self.players.len() - 1 {
 					self.current_turn = self.players.first().unwrap().id;
@@ -167,6 +195,7 @@ impl InProgressGame {
 					self.current_turn = self.players.iter().nth(current_players_position + 1).unwrap().id;
 				}
 			}
+			self.get_another_turn = false;
 		}
 
 		//TODO: actually send move result
@@ -174,6 +203,28 @@ impl InProgressGame {
 	}
 }
 
+fn player_wants_to_move_space_occupied_by_chaser(players: &Vec<Player>, runner: PlayerId, next_location: Location) -> bool {
+	return players.iter()
+		.filter(|x| x.id != runner)
+		.filter(|x| x.current_location == next_location)
+		.count() > 0;
+}
+
+fn remove_used_timetable_card_from_player(players: Vec<Player>, player_id: PlayerId, timetable_card_used: &TimetableCard) -> Vec<Player> {
+	let mut already_removed = false;
+	return players.into_iter().map(|mut x| {
+		if x.id != player_id{
+			return x;
+		}
+		x.timetable_cards.retain(|x| if x != timetable_card_used || already_removed {
+			true
+		} else {
+			already_removed = true;
+			false
+		});
+		return x;
+	}).collect();
+}
 
 
 #[derive(Debug, Clone, serde::Deserialize, Default)]
@@ -205,28 +256,5 @@ pub struct MoveResult {
 	pub runner_caught: bool,
 	pub timetable_cards_received: Vec<TimetableCard>,
 	pub finished_game: Option<FinishedGame>,
-}
-
-
-fn player_wants_to_move_space_occupied_by_chaser(players: &Vec<Player>, runner: PlayerId, next_location: Location) -> bool {
-	return players.iter()
-		.filter(|x| x.id != runner)
-		.filter(|x| x.current_location == next_location)
-		.count() > 0;
-}
-
-fn remove_used_timetable_card_from_player(players: Vec<Player>, player_id: PlayerId, timetable_card_used: &TimetableCard) -> Vec<Player> {
-	let mut already_removed = false;
-	return players.into_iter().map(|mut x| {
-		if x.id != player_id{
-			return x;
-		}
-		x.timetable_cards.retain(|x| if x != timetable_card_used || already_removed {
-			true
-		} else {
-			already_removed = true;
-			false
-		});
-		return x;
-	}).collect();
+	pub power_up_status: PowerupStatus,
 }
