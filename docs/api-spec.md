@@ -74,6 +74,10 @@ in_progress:
 	"last_used_timetable_card": "low_speed",
 	"dice_result": 4, //set only if a dice was rolled last turn
 	"event_card_bought": true, //set only to true if an event card was bought last turn
+	"runner_current_country": "" //contains the last known country the runner was in, revealed through buying powerups
+	"runner_current_country": "" //contains the last known country the runner was in, revealed through buying powerups
+	"runner_destination": "" //contains the destination the runner need to get to, revealed through buying powerups
+	"chaser_gets_another_turn": false, //is true when a chaser gets another turn after buying the powerup chaser_gets_two_turns
 }
 ```
 
