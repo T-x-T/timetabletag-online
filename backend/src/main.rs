@@ -21,9 +21,13 @@ pub enum CustomError {
   ActionNotAllowed,
   NotYourTurn,
   InvalidNextLocation,
-  MissingCard,
+  MissingTimetableCard,
   AlreadyMoved,
   NotEnoughCoins,
+  EventCardNoLocationSent,
+  EventCardAlreadyBought,
+  NotAnEventField,
+  EventCardStackEmpty,
 }
 
 impl std::fmt::Display for CustomError {
@@ -35,9 +39,13 @@ impl std::fmt::Display for CustomError {
       CustomError::ActionNotAllowed => write!(f, "you are not allowed to do what you just tried to do"),
       CustomError::NotYourTurn => write!(f, "it's not your turn"),
       CustomError::InvalidNextLocation => write!(f, "you actually can't get to the chosen next location"),
-      CustomError::MissingCard => write!(f, "you don't have the card you're trying to play"),
+      CustomError::MissingTimetableCard => write!(f, "you don't have the card you're trying to play"),
       CustomError::AlreadyMoved => write!(f, "you already moved in your current turn"),
       CustomError::NotEnoughCoins => write!(f, "you don't have enough coins"),
+      CustomError::EventCardNoLocationSent => write!(f, "you need to send a new location before buying an event card"),
+      CustomError::EventCardAlreadyBought => write!(f, "you already bought an event card in this turn"),
+      CustomError::NotAnEventField => write!(f, "you can only buy an event card when you're on an event spot"),
+      CustomError::EventCardStackEmpty => write!(f, "there aren't any event cards in the stack anymore. Congratulations!"),
     }
   }
 }

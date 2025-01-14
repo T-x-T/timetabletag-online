@@ -246,9 +246,9 @@ mod make_move {
 			let mut game = game.start(game.host).unwrap();
 	
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			game.current_turn = game.host;
@@ -275,9 +275,9 @@ mod make_move {
 			let mut game = game.start(game.host).unwrap();
 	
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			game.current_turn = game.host;
@@ -312,9 +312,9 @@ mod make_move {
 			let mut game = game.start(game.host).unwrap();
 	
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			game.current_turn = game.host;
@@ -539,7 +539,7 @@ mod make_move {
 
 			let res = game.make_move(move_made);
 			assert!(res.is_err());
-			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::MissingCard.to_string());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::MissingTimetableCard.to_string());
 		}
 
 		#[test]
@@ -741,9 +741,9 @@ mod make_move {
 			game.timetable_card_stack = vec![TimetableCard::Joker; 10];
 
 			game.players = vec![
-				Player { id: game.runner.clone(), display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5]},
-				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.runner.clone(), display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: chaser1, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: chaser2, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			game.current_turn = chaser2;
@@ -801,9 +801,9 @@ mod make_move {
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -855,9 +855,9 @@ mod make_move {
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -914,9 +914,9 @@ mod make_move {
 				game.timetable_card_stack = vec![TimetableCard::Joker];
 	
 				game.players = vec![
-					Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-					Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-					Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+					Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+					Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+					Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 				];
 	
 				let move_made = Move {
@@ -952,9 +952,9 @@ mod make_move {
 			game.timetable_card_stack = vec![TimetableCard::Joker];
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Paris, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -986,9 +986,9 @@ mod make_move {
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1017,9 +1017,9 @@ mod make_move {
 			game.coins_runner = 10;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1049,9 +1049,9 @@ mod make_move {
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1082,9 +1082,9 @@ mod make_move {
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1112,9 +1112,9 @@ mod make_move {
 			game.destination = Location::Madrid;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Zaragoza, timetable_cards: vec![TimetableCard::LowSpeed], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Madrid, timetable_cards: vec![TimetableCard::LowSpeed], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1148,9 +1148,9 @@ mod make_move {
 			game.coins_chasers = 5;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1176,9 +1176,9 @@ mod make_move {
 			game.coins_chasers = 4;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1205,10 +1205,10 @@ mod make_move {
 			game.coins_chasers = 9;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player4, display_name: "test_4".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player4, display_name: "test_4".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1234,9 +1234,9 @@ mod make_move {
 			game.coins_chasers = 5;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1262,9 +1262,9 @@ mod make_move {
 			game.coins_chasers = 10;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1290,9 +1290,9 @@ mod make_move {
 			game.coins_chasers = 100;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1344,9 +1344,9 @@ mod make_move {
 			game.coins_chasers = 100;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
-				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5] },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Padua, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
 
 			let move_made = Move {
@@ -1357,6 +1357,278 @@ mod make_move {
 			let res = game.make_move(move_made).unwrap();
 
 			assert_eq!(res.power_up_status.runner_destination.unwrap(), Location::Dublin);
+		}
+	}
+
+	mod buy_event_card {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_ok());
+			assert!(res.as_ref().unwrap().event_card_received.is_some());
+			assert!(res.as_ref().unwrap().event_card_bought);
+			assert!(res.as_ref().unwrap().event_card_received.is_some());
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().event_cards.len(), 1);
+			assert!(game.in_progress_move.unwrap().event_card_bought);
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().event_cards.first().unwrap(), res.as_ref().unwrap().event_card_received.as_ref().unwrap());
+		}
+
+		#[test]
+		fn doesnt_work_when_new_location_didnt_get_sent() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::EventCardNoLocationSent.to_string());
+		}
+
+		#[test]
+		fn doesnt_work_when_event_card_already_bought() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			
+			let move_made = Move {
+				player_id: game.current_turn,
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::EventCardAlreadyBought.to_string());
+		}
+
+		#[test]
+		fn doesnt_work_when_not_on_event_field() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotAnEventField.to_string());
+		}
+
+		#[test]
+		fn doesnt_work_if_runner_has_no_coins() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 0;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotEnoughCoins.to_string());
+		}
+
+		#[test]
+		fn doesnt_work_if_chaser_has_no_coins() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 0;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotEnoughCoins.to_string());
+		}
+
+		#[test]
+		fn event_card_stack_gets_smaller_by_one() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_ok());
+			assert_eq!(game.event_card_stack.len(), 19);
+		}
+
+		#[test]
+		fn returns_event_card_empty_error_when_its_empty() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+			game.event_card_stack = Vec::new();
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::EventCardStackEmpty.to_string());
 		}
 	}
 

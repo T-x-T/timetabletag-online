@@ -28,12 +28,13 @@ pub enum Game {
 	Finished(FinishedGame),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Default)]
 pub struct Player {
 	id: Uuid,
 	display_name: String,
 	current_location: Location,
 	timetable_cards: Vec<TimetableCard>,
+	event_cards: Vec<EventCard>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]

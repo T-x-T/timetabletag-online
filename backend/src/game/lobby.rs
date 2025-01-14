@@ -18,8 +18,7 @@ impl Lobby {
 		let player = Player {
 			id: player_id.clone(),
 			display_name,
-			current_location: Location::Nancy,
-			timetable_cards: Vec::new(),
+			..Default::default()
 		};
 
 		return Self {
@@ -39,8 +38,7 @@ impl Lobby {
 		let player = Player {
 			id: id.clone(),
 			display_name,
-			current_location: Location::Nancy,
-			timetable_cards: Vec::new(),
+			..Default::default()
 		};
 
 		self.players.push(player);

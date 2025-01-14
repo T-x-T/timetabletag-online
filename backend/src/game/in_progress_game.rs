@@ -29,7 +29,7 @@ impl InProgressGame {
 
 		let mut move_result = MoveResult::default();
 
-		let player: Player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
+		let mut player: Player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
 
 		if move_made.next_location.is_some() {
 			move_made.next_location_parsed = Some(Location::from(move_made.next_location.clone().unwrap()));
@@ -44,6 +44,7 @@ impl InProgressGame {
 				move_data: move_made.clone(),
 				new_location_already_sent: false,
 				use_timetable_card_already_sent: false,
+				event_card_bought: false,
 			});
 		}
 
@@ -53,7 +54,7 @@ impl InProgressGame {
 			}
 
 			if !self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
-				return Err(Box::new(crate::CustomError::MissingCard));
+				return Err(Box::new(crate::CustomError::MissingTimetableCard));
 			}
 
 			let current_location = &player.current_location;
@@ -129,16 +130,20 @@ impl InProgressGame {
 				self.players = self.players.clone().into_iter().map(|mut x| {
 					if x.id == player.id {
 						x.timetable_cards.push(timetable_card.clone());
+						player = x.clone();
 					}
 					return x;
 				}).collect();
 			}
 
-			self.players = self.players.clone().into_iter().map(|x| {
-				if x.id != player.id {
+			self.players = self.players.clone().into_iter().map(|mut x| {
+				if x.id == player.id {
+					x.current_location = move_made.next_location_parsed.unwrap();
+					player = x.clone();
+					return x;
+				} else {
 					return x;
 				}
-				return Player {current_location: move_made.next_location_parsed.unwrap(), ..x };
 			}).collect();
 
 			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
@@ -171,10 +176,55 @@ impl InProgressGame {
 				},
 			};
 
-			self.power_up_status = move_result.power_up_status.clone(); //TODO: return this to all players in get game_state api call
+			self.power_up_status = move_result.power_up_status.clone();
 		}
 
-		//TODO: buy event card when landing on event spot
+		if move_made.buy_event_card {
+			if !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
+				return Err(Box::new(crate::CustomError::EventCardNoLocationSent));
+			}
+
+			if self.in_progress_move.as_ref().unwrap().event_card_bought {
+				return Err(Box::new(crate::CustomError::EventCardAlreadyBought));
+			}
+
+			if !player.current_location.is_event_field() {
+				return Err(Box::new(crate::CustomError::NotAnEventField));
+			}
+
+			if player.id == self.runner {
+				if self.coins_runner < 1 {
+					return Err(Box::new(crate::CustomError::NotEnoughCoins));
+				}
+			} else {
+				if self.coins_chasers < 1 {
+					return Err(Box::new(crate::CustomError::NotEnoughCoins));
+				}
+			}
+
+			let event_card = self.event_card_stack.pop();
+
+			if event_card.is_none() {
+				return Err(Box::new(crate::CustomError::EventCardStackEmpty));
+			}
+
+			self.in_progress_move.as_mut().unwrap().event_card_bought = true;
+
+			move_result.event_card_bought = true;
+			move_result.event_card_received = event_card.clone();
+			self.event_card_bought = true;
+
+			self.players = self.players.clone().into_iter().map(|mut x| {
+				if x.id == player.id {
+					x.event_cards.push(event_card.clone().unwrap());
+					player = x.clone();
+					return x;
+				} else {
+					return x;
+				}
+			}).collect();
+		}
+
 		//TODO: use event card
 		//TODO: event card effects?
 		//TODO: throwing up to two timetable cards away
@@ -198,7 +248,6 @@ impl InProgressGame {
 			self.get_another_turn = false;
 		}
 
-		//TODO: actually send move result
 		return Ok(move_result);
 	}
 }
@@ -246,6 +295,7 @@ pub struct InProgressMove {
 	pub move_data: Move,
 	pub new_location_already_sent: bool,
 	pub use_timetable_card_already_sent: bool,
+	pub event_card_bought: bool,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize)]

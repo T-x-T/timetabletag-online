@@ -118,9 +118,10 @@ pub enum Location {
 	Bologna,
 	Pisa,
 	Florence,
-	SanMarino,
 	Perugia,
 	Rome,
+	//San Marino
+	SanMarino,
 	//Poland
 	Gdansk,
 	Szczecin,
@@ -144,6 +145,12 @@ pub enum Location {
 	Split,
 	//Bosnia and Herzegovina
 	BanjaLuka,
+}
+
+impl Default for Location {
+	fn default() -> Self {
+		return Location::Nancy;
+	}
 }
 
 impl Location {
