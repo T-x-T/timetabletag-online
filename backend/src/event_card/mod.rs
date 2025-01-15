@@ -85,28 +85,28 @@ impl std::convert::From<String> for EventCard {
 
 pub fn generate_event_card_stack() -> Vec<EventCard> {
 	let mut rng = thread_rng();
-	let mut output: Vec<EventCard> = Vec::new();
-	
-	output.push(EventCard::GiveMeYourCards);
-	output.push(EventCard::HuntedByMenForSport);
-	output.push(EventCard::LuxembourgIsGermanyFrance);
-	output.push(EventCard::LetsGoToTheBeach);
-	output.push(EventCard::ImagineTrains);
-	output.push(EventCard::ConsiderVelocity);
-	output.push(EventCard::ItsPopsicle);
-	output.push(EventCard::HydrateOrDiedrate);
-	output.push(EventCard::StealthOutfit);
-	output.push(EventCard::CardinalDirectionsAndVibes);
-	output.push(EventCard::Pizzazz);
-	output.push(EventCard::RatMode);
-	output.push(EventCard::BingBong);
-	output.push(EventCard::LeaveCountryImmediately);
-	output.push(EventCard::ZugFaelltAus);
-	output.push(EventCard::SnackZone);
-	output.push(EventCard::ItsAllInTheTrees);
-	output.push(EventCard::BonjourToEveryone);
-	output.push(EventCard::NoTalk);
-	output.push(EventCard::SloveniaAsATreat);
+	let mut output: Vec<EventCard> = vec![
+		EventCard::GiveMeYourCards,
+		EventCard::HuntedByMenForSport,
+		EventCard::LuxembourgIsGermanyFrance,
+		EventCard::LetsGoToTheBeach,
+		EventCard::ImagineTrains,
+		EventCard::ConsiderVelocity,
+		EventCard::ItsPopsicle,
+		EventCard::HydrateOrDiedrate,
+		EventCard::StealthOutfit,
+		EventCard::CardinalDirectionsAndVibes,
+		EventCard::Pizzazz,
+		EventCard::RatMode,
+		EventCard::BingBong,
+		EventCard::LeaveCountryImmediately,
+		EventCard::ZugFaelltAus,
+		EventCard::SnackZone,
+		EventCard::ItsAllInTheTrees,
+		EventCard::BonjourToEveryone,
+		EventCard::NoTalk,
+		EventCard::SloveniaAsATreat,
+	];
 
 	output.shuffle(&mut rng);
 

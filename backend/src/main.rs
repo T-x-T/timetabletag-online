@@ -28,6 +28,8 @@ pub enum CustomError {
   EventCardAlreadyBought,
   NotAnEventField,
   EventCardStackEmpty,
+  EventCardNotOnYourHand,
+  YoureCurrentlyHuntedByMenForSport,
 }
 
 impl std::fmt::Display for CustomError {
@@ -46,6 +48,8 @@ impl std::fmt::Display for CustomError {
       CustomError::EventCardAlreadyBought => write!(f, "you already bought an event card in this turn"),
       CustomError::NotAnEventField => write!(f, "you can only buy an event card when you're on an event spot"),
       CustomError::EventCardStackEmpty => write!(f, "there aren't any event cards in the stack anymore. Congratulations!"),
+      CustomError::EventCardNotOnYourHand => write!(f, "you don't have the event card you're trying to play on your hand."),
+      CustomError::YoureCurrentlyHuntedByMenForSport => write!(f, "you're currently hunted by men for sport. You are very scared and must use your fastest method of transport"),
     }
   }
 }

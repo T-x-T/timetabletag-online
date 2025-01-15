@@ -1,5 +1,7 @@
 use super::*;
 
+use rand::prelude::*;
+
 #[derive(Debug, Clone)]
 pub struct InProgressGame {
 	pub id: GameId,
@@ -27,6 +29,7 @@ impl InProgressGame {
 			return Err(Box::new(crate::CustomError::NotYourTurn));
 		}
 
+		let mut rng = thread_rng();
 		let mut move_result = MoveResult::default();
 
 		let mut player: Player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
@@ -57,7 +60,36 @@ impl InProgressGame {
 				return Err(Box::new(crate::CustomError::MissingTimetableCard));
 			}
 
-			let current_location = &player.current_location;
+			let current_location = player.current_location;
+
+			if player.hunted_by_men_for_sport {
+				println!("{:?}", player.timetable_cards);
+				match move_made.use_timetable_card_parsed.as_ref().unwrap() {
+					TimetableCard::LowSpeed => {
+						if !current_location.get_high_speed_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::HighSpeed) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
+						}
+						if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
+						}
+					},
+					TimetableCard::HighSpeed => {
+						if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
+						}
+					},
+					_ => (),
+				};
+
+				self.players = self.players.clone().into_iter().map(|mut x| {
+					if x.id == player.id {
+						x.hunted_by_men_for_sport = false;
+					}
+					return x;
+				}).collect();
+				player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
+			}
+
 			match move_made.use_timetable_card_parsed.clone().unwrap() {
 				TimetableCard::LowSpeed => {
 					if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
@@ -201,28 +233,195 @@ impl InProgressGame {
 					return Err(Box::new(crate::CustomError::NotEnoughCoins));
 				}
 			}
-
-			let event_card = self.event_card_stack.pop();
+			let mut event_card = self.event_card_stack.pop();
 
 			if event_card.is_none() {
 				return Err(Box::new(crate::CustomError::EventCardStackEmpty));
 			}
 
-			self.in_progress_move.as_mut().unwrap().event_card_bought = true;
+			let mut instantly_play_event_card = false;
 
+			match event_card.as_ref().unwrap() {
+				EventCard::GiveMeYourCards => {
+					let cloned_players = self.players.clone();
+					let players_with_event_cards: Vec<&Player> = cloned_players.iter().filter(|x| !x.event_cards.is_empty()).collect();
+					if !players_with_event_cards.is_empty() {
+						let random_player_with_event_cards = players_with_event_cards.choose(&mut rng).unwrap();
+						let random_event_card = random_player_with_event_cards.event_cards.choose(&mut rng).unwrap();
+	
+						self.players = self.players.clone().into_iter().map(|mut x| {
+							if x.id == random_player_with_event_cards.id {
+								x.event_cards.retain(|x| x != random_event_card);
+							}
+							return x;
+						}).collect();
+
+						event_card = Some(random_event_card.clone());
+					} else {
+						event_card = self.event_card_stack.pop();
+
+						if event_card.is_none() {
+							return Err(Box::new(crate::CustomError::EventCardStackEmpty));
+						}
+					}
+				},
+
+				EventCard::HuntedByMenForSport => {
+					instantly_play_event_card = true;
+					self.players = self.players.clone().into_iter().map(|mut x| {
+						if x.id == player.id {
+							x.hunted_by_men_for_sport = true;
+						}
+						return x;
+					}).collect();
+				},
+				EventCard::LuxembourgIsGermanyFrance => {
+					
+				},
+				EventCard::LetsGoToTheBeach => {
+					
+				},
+				EventCard::ImagineTrains => {
+					
+				},
+				EventCard::ConsiderVelocity => {
+					
+				},
+				EventCard::ItsPopsicle => {
+					
+				},
+				EventCard::HydrateOrDiedrate => {
+					
+				},
+				EventCard::StealthOutfit => {
+					
+				},
+				EventCard::CardinalDirectionsAndVibes => {
+					
+				},
+				EventCard::Pizzazz => {
+					
+				},
+				EventCard::RatMode => {
+					
+				},
+				EventCard::BingBong => {
+					
+				},
+				EventCard::LeaveCountryImmediately => {
+					
+				},
+				EventCard::ZugFaelltAus => {
+					
+				},
+				EventCard::SnackZone => {
+					
+				},
+				EventCard::ItsAllInTheTrees => {
+					
+				},
+				EventCard::BonjourToEveryone => {
+					
+				},
+				EventCard::NoTalk => {
+					
+				},
+				EventCard::SloveniaAsATreat => {
+					
+				},
+			}
+
+			self.in_progress_move.as_mut().unwrap().event_card_bought = true;
 			move_result.event_card_bought = true;
-			move_result.event_card_received = event_card.clone();
 			self.event_card_bought = true;
+			move_result.event_card_received = event_card.clone();
+
+			if !instantly_play_event_card {
+				
+				self.players = self.players.clone().into_iter().map(|mut x| {
+					if x.id == player.id {
+						x.event_cards.push(event_card.clone().unwrap());
+						player = x.clone();
+						return x;
+					} else {
+						return x;
+					}
+				}).collect();
+			}
+
+		}
+
+		if move_made.use_event_card.is_some() {
+			let event_card: EventCard = move_made.use_event_card.unwrap().into();
+
+			if !self.players.iter().find(|x| x.id == player.id).unwrap().event_cards.contains(&event_card) {
+				return Err(Box::new(crate::CustomError::EventCardNotOnYourHand));
+			}
 
 			self.players = self.players.clone().into_iter().map(|mut x| {
 				if x.id == player.id {
-					x.event_cards.push(event_card.clone().unwrap());
-					player = x.clone();
-					return x;
-				} else {
-					return x;
+					x.event_cards.retain(|x| *x != event_card);
 				}
+				return x;
 			}).collect();
+
+			match event_card {
+				EventCard::LuxembourgIsGermanyFrance => {
+					
+				},
+				EventCard::LetsGoToTheBeach => {
+					
+				},
+				EventCard::ImagineTrains => {
+					
+				},
+				EventCard::ConsiderVelocity => {
+					
+				},
+				EventCard::ItsPopsicle => {
+					
+				},
+				EventCard::HydrateOrDiedrate => {
+					
+				},
+				EventCard::StealthOutfit => {
+					
+				},
+				EventCard::CardinalDirectionsAndVibes => {
+					
+				},
+				EventCard::Pizzazz => {
+					
+				},
+				EventCard::RatMode => {
+					
+				},
+				EventCard::BingBong => {
+					
+				},
+				EventCard::LeaveCountryImmediately => {
+					
+				},
+				EventCard::ZugFaelltAus => {
+					
+				},
+				EventCard::SnackZone => {
+					
+				},
+				EventCard::ItsAllInTheTrees => {
+					
+				},
+				EventCard::BonjourToEveryone => {
+					
+				},
+				EventCard::NoTalk => {
+					
+				},
+				EventCard::SloveniaAsATreat => {
+					
+				},
+				_ => (),
+			}
 		}
 
 		//TODO: use event card
