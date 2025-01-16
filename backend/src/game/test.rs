@@ -1846,6 +1846,102 @@ mod make_move {
 			assert_eq!(res.event_card_received.unwrap(), EventCard::BingBong);
 			assert_eq!(game.players.iter().find(|x| x.id == game.current_turn).unwrap().event_cards.len(), 1);
 		}
+
+		#[test]
+		fn luxembourg_is_germany_france_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Calais, timetable_cards: vec![TimetableCard::LowSpeed; 10], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::LuxembourgIsGermanyFrance];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("ghent".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made).unwrap();
+
+			assert_eq!(res.event_card_received.unwrap(), EventCard::LuxembourgIsGermanyFrance);
+			assert!(game.players.iter().find(|x| x.id == game.current_turn).unwrap().luxembourg_is_germany_france_active);
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brussels".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("luxembourg".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brussels".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::YouMustGoToGermanyOrFrance.to_string());
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("frankfurt".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			assert!(!game.players.iter().find(|x| x.id == game.host).unwrap().luxembourg_is_germany_france_active);
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("stuttgart".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			assert_ne!(game.current_turn, game.host);
+		}
 	}
 
 

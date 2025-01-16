@@ -110,6 +110,15 @@ impl InProgressGame {
 				return Err(Box::new(crate::CustomError::InvalidNextLocation));
 			}
 
+			if current_location == Location::Luxembourg && player.luxembourg_is_germany_france_active {
+				if move_made.next_location_parsed.unwrap() == Location::Brussels {
+					return Err(Box::new(crate::CustomError::YouMustGoToGermanyOrFrance));
+				} else {
+					player.luxembourg_is_germany_france_active = false;
+					self.get_another_turn = true;
+				}
+			}
+
 			player = remove_used_timetable_card_from_player(player, move_made.use_timetable_card_parsed.as_ref().unwrap());
 
 			if player.timetable_cards.is_empty() {
@@ -250,7 +259,8 @@ impl InProgressGame {
 					player.must_use_fastest_transport_for_rounds = 2;
 				},
 				EventCard::LuxembourgIsGermanyFrance => {
-					
+					instantly_play_event_card = true;
+					player.luxembourg_is_germany_france_active = true;
 				},
 				EventCard::LetsGoToTheBeach => {
 					
@@ -326,9 +336,6 @@ impl InProgressGame {
 			player.event_cards.retain(|x| *x != event_card);
 
 			match event_card {
-				EventCard::LuxembourgIsGermanyFrance => {
-					
-				},
 				EventCard::LetsGoToTheBeach => {
 					
 				},
@@ -414,7 +421,7 @@ impl InProgressGame {
 			}
 			return x;
 		}).collect();
-		
+
 		return Ok(move_result);
 	}
 }

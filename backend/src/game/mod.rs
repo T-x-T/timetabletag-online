@@ -36,6 +36,7 @@ pub struct Player {
 	timetable_cards: Vec<TimetableCard>,
 	event_cards: Vec<EventCard>,
 	must_use_fastest_transport_for_rounds: u8,
+	luxembourg_is_germany_france_active: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
