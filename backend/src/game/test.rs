@@ -1712,7 +1712,7 @@ mod make_move {
 			game.coins_runner = 5;
 
 			game.players = vec![
-				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::HighSpeed], ..Default::default() },
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::HighSpeed], ..Default::default() },
 				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
 			];
@@ -1726,17 +1726,30 @@ mod make_move {
 				buy_event_card: true,
 				..Default::default()
 			};
-			let _ = game.make_move(move_made).unwrap();
-
-			assert!(game.players.iter().find(|x| x.id == game.current_turn).unwrap().hunted_by_men_for_sport);
-
-
+			let res = game.make_move(move_made).unwrap();
+			
+			assert_eq!(res.event_card_received.unwrap(), EventCard::HuntedByMenForSport);
+			assert_eq!(game.players.iter().find(|x| x.id == game.current_turn).unwrap().must_use_fastest_transport_for_rounds, 2);
+			
 			let move_made = Move {
 				player_id: game.current_turn,
 				finish_move: true,
 				..Default::default()
 			};
 			let _ = game.make_move(move_made).unwrap();
+			
+			game.current_turn = game.host;
+			
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_fastest_transport_for_rounds, 1);
 
 			game.current_turn = game.host;
 
@@ -1749,27 +1762,20 @@ mod make_move {
 			};
 			let res = game.make_move(move_made);
 
-			assert!(res.is_ok());
-			// assert!(res.is_err());
-			// assert_eq!(res.err().unwrap().to_string(), crate::CustomError::YoureCurrentlyHuntedByMenForSport.to_string());
-			
-			// game.players = vec![
-			// 	Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::HighSpeed], ..Default::default() },
-			// 	Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
-			// 	Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
-			// ];
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::YoureCurrentlyHuntedByMenForSport.to_string());
 
-			// let move_made = Move {
-			// 	player_id: game.current_turn,
-			// 	next_location: Some("rennes".to_string()),
-			// 	use_timetable_card: Some("low_speed".to_string()),
-			// 	finish_move: true,
-			// 	..Default::default()
-			// };
-			// let res = game.make_move(move_made);
-			// println!("{res:?}");
-			// assert!(res.is_ok());
-			assert!(!game.players.iter().find(|x| x.id == game.host).unwrap().hunted_by_men_for_sport);
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("paris".to_string()),
+				use_timetable_card: Some("high_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+
+			assert!(res.is_ok());
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_fastest_transport_for_rounds, 0);
 		}
 
 		#[test]

@@ -62,8 +62,7 @@ impl InProgressGame {
 
 			let current_location = player.current_location;
 
-			if player.hunted_by_men_for_sport {
-				println!("{:?}", player.timetable_cards);
+			if player.must_use_fastest_transport_for_rounds > 0 {
 				match move_made.use_timetable_card_parsed.as_ref().unwrap() {
 					TimetableCard::LowSpeed => {
 						if !current_location.get_high_speed_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::HighSpeed) || player.timetable_cards.contains(&TimetableCard::Joker)) {
@@ -83,7 +82,7 @@ impl InProgressGame {
 
 				self.players = self.players.clone().into_iter().map(|mut x| {
 					if x.id == player.id {
-						x.hunted_by_men_for_sport = false;
+						x.must_use_fastest_transport_for_rounds -= 1;
 					}
 					return x;
 				}).collect();
@@ -270,7 +269,7 @@ impl InProgressGame {
 					instantly_play_event_card = true;
 					self.players = self.players.clone().into_iter().map(|mut x| {
 						if x.id == player.id {
-							x.hunted_by_men_for_sport = true;
+							x.must_use_fastest_transport_for_rounds = 2;
 						}
 						return x;
 					}).collect();
@@ -427,6 +426,7 @@ impl InProgressGame {
 		//TODO: use event card
 		//TODO: event card effects?
 		//TODO: throwing up to two timetable cards away
+		//TODO: runner gets 3 rounds head start with 3 chasers
  
 		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
 			return Err(Box::new(crate::CustomError::ActionNotAllowed));
@@ -446,7 +446,6 @@ impl InProgressGame {
 			}
 			self.get_another_turn = false;
 		}
-
 		return Ok(move_result);
 	}
 }

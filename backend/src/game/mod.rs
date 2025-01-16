@@ -35,7 +35,7 @@ pub struct Player {
 	current_location: Location,
 	timetable_cards: Vec<TimetableCard>,
 	event_cards: Vec<EventCard>,
-	hunted_by_men_for_sport: bool,
+	must_use_fastest_transport_for_rounds: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
