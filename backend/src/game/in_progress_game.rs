@@ -80,13 +80,7 @@ impl InProgressGame {
 					_ => (),
 				};
 
-				self.players = self.players.clone().into_iter().map(|mut x| {
-					if x.id == player.id {
-						x.must_use_fastest_transport_for_rounds -= 1;
-					}
-					return x;
-				}).collect();
-				player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
+				player.must_use_fastest_transport_for_rounds -= 1;
 			}
 
 			match move_made.use_timetable_card_parsed.clone().unwrap() {
@@ -116,9 +110,9 @@ impl InProgressGame {
 				return Err(Box::new(crate::CustomError::InvalidNextLocation));
 			}
 
-			self.players = remove_used_timetable_card_from_player(self.players.clone(), move_made.player_id, move_made.use_timetable_card_parsed.as_ref().unwrap());
+			player = remove_used_timetable_card_from_player(player, move_made.use_timetable_card_parsed.as_ref().unwrap());
 
-			if self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.is_empty() {
+			if player.timetable_cards.is_empty() {
 				move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Chaser, WinCondition::TimetableCardsRanOut));
 				return Ok(move_result);
 			}
@@ -158,24 +152,10 @@ impl InProgressGame {
 				let timetable_card = self.timetable_card_stack.pop().unwrap();
 				move_result.timetable_cards_received = vec![timetable_card.clone()];
 				
-				self.players = self.players.clone().into_iter().map(|mut x| {
-					if x.id == player.id {
-						x.timetable_cards.push(timetable_card.clone());
-						player = x.clone();
-					}
-					return x;
-				}).collect();
+				player.timetable_cards.push(timetable_card.clone());
 			}
 
-			self.players = self.players.clone().into_iter().map(|mut x| {
-				if x.id == player.id {
-					x.current_location = move_made.next_location_parsed.unwrap();
-					player = x.clone();
-					return x;
-				} else {
-					return x;
-				}
-			}).collect();
+			player.current_location = move_made.next_location_parsed.unwrap();
 
 			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
@@ -267,12 +247,7 @@ impl InProgressGame {
 
 				EventCard::HuntedByMenForSport => {
 					instantly_play_event_card = true;
-					self.players = self.players.clone().into_iter().map(|mut x| {
-						if x.id == player.id {
-							x.must_use_fastest_transport_for_rounds = 2;
-						}
-						return x;
-					}).collect();
+					player.must_use_fastest_transport_for_rounds = 2;
 				},
 				EventCard::LuxembourgIsGermanyFrance => {
 					
@@ -336,16 +311,7 @@ impl InProgressGame {
 			move_result.event_card_received = event_card.clone();
 
 			if !instantly_play_event_card {
-				
-				self.players = self.players.clone().into_iter().map(|mut x| {
-					if x.id == player.id {
-						x.event_cards.push(event_card.clone().unwrap());
-						player = x.clone();
-						return x;
-					} else {
-						return x;
-					}
-				}).collect();
+				player.event_cards.push(event_card.clone().unwrap());
 			}
 
 		}
@@ -353,16 +319,11 @@ impl InProgressGame {
 		if move_made.use_event_card.is_some() {
 			let event_card: EventCard = move_made.use_event_card.unwrap().into();
 
-			if !self.players.iter().find(|x| x.id == player.id).unwrap().event_cards.contains(&event_card) {
+			if !player.event_cards.contains(&event_card) {
 				return Err(Box::new(crate::CustomError::EventCardNotOnYourHand));
 			}
 
-			self.players = self.players.clone().into_iter().map(|mut x| {
-				if x.id == player.id {
-					x.event_cards.retain(|x| *x != event_card);
-				}
-				return x;
-			}).collect();
+			player.event_cards.retain(|x| *x != event_card);
 
 			match event_card {
 				EventCard::LuxembourgIsGermanyFrance => {
@@ -446,6 +407,14 @@ impl InProgressGame {
 			}
 			self.get_another_turn = false;
 		}
+
+		self.players = self.players.clone().into_iter().map(|mut x| {
+			if x.id == player.id {
+				x = player.clone();
+			}
+			return x;
+		}).collect();
+		
 		return Ok(move_result);
 	}
 }
@@ -457,20 +426,15 @@ fn player_wants_to_move_space_occupied_by_chaser(players: &Vec<Player>, runner: 
 		.count() > 0;
 }
 
-fn remove_used_timetable_card_from_player(players: Vec<Player>, player_id: PlayerId, timetable_card_used: &TimetableCard) -> Vec<Player> {
+fn remove_used_timetable_card_from_player(mut player: Player, timetable_card_used: &TimetableCard) -> Player {
 	let mut already_removed = false;
-	return players.into_iter().map(|mut x| {
-		if x.id != player_id{
-			return x;
-		}
-		x.timetable_cards.retain(|x| if x != timetable_card_used || already_removed {
-			true
-		} else {
-			already_removed = true;
-			false
-		});
-		return x;
-	}).collect();
+	player.timetable_cards.retain(|x| if x != timetable_card_used || already_removed {
+		true
+	} else {
+		already_removed = true;
+		false
+	});
+	return player;
 }
 
 
