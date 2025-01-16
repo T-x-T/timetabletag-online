@@ -51,6 +51,14 @@ impl InProgressGame {
 			});
 		}
 
+		if player.lets_go_to_the_beach_active && move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_none() {
+			player.lets_go_to_the_beach_active = false;
+
+			player.current_location = move_made.next_location_parsed.unwrap();
+			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
+			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+		}
+
 		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() {
 			if self.in_progress_move.as_ref().unwrap().new_location_already_sent {
 				return Err(Box::new(crate::CustomError::AlreadyMoved));
@@ -165,7 +173,6 @@ impl InProgressGame {
 			}
 
 			player.current_location = move_made.next_location_parsed.unwrap();
-
 			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 		}
@@ -263,7 +270,8 @@ impl InProgressGame {
 					player.luxembourg_is_germany_france_active = true;
 				},
 				EventCard::LetsGoToTheBeach => {
-					
+					instantly_play_event_card = true;
+					player.lets_go_to_the_beach_active = true;
 				},
 				EventCard::ImagineTrains => {
 					
@@ -336,9 +344,6 @@ impl InProgressGame {
 			player.event_cards.retain(|x| *x != event_card);
 
 			match event_card {
-				EventCard::LetsGoToTheBeach => {
-					
-				},
 				EventCard::ImagineTrains => {
 					
 				},

@@ -577,6 +577,42 @@ impl Location {
 		}
 	}
 
+	pub fn is_coastal(&self) -> bool {
+		match self {
+			Location::Belfast => true,
+			Location::Dublin => true,
+			Location::Rosslare => true,
+			Location::Cairnryan => true,
+			Location::Edinburgh => true,
+			Location::Newcastle => true,
+			Location::Liverpool => true,
+			Location::Holyhead => true,
+			Location::Fishguard => true,
+			Location::Swansea => true,
+			Location::Plymouth => true,
+			Location::Bournemouth => true,
+			Location::Valencia => true,
+			Location::Barcelona => true,
+			Location::Marseille => true,
+			Location::Nice => true,
+			Location::LaRochelle => true,
+			Location::Brest => true,
+			Location::LeHavre => true,
+			Location::Calais => true,
+			Location::TheHague => true,
+			Location::Amsterdam => true,
+			Location::Esbjerg => true,
+			Location::Aarhus => true,
+			Location::Copenhagen => true,
+			Location::Kiel => true,
+			Location::Gdansk => true,
+			Location::Genoa => true,
+			Location::Venice => true,
+			Location::Rijeka => true,
+			_ => false,
+		}
+	}
+
 	fn get_iter() -> impl Iterator<Item = Location> {
 		return vec![
 				Location::Dublin,
