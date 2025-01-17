@@ -102,12 +102,24 @@ impl InProgressGame {
 			match move_made.use_timetable_card_parsed.clone().unwrap() {
 				TimetableCard::LowSpeed => {
 					if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+						if player.imagine_if_trains_active {
+							if !current_location.get_high_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
+								return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+							}
+						} else {
+							return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+						}
 					}
 				},
 				TimetableCard::HighSpeed => {
 					if !current_location.get_high_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+						if player.imagine_if_trains_active {
+							if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
+								return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+							}
+						} else {
+							return Err(Box::new(crate::CustomError::InvalidNextLocation));	
+						}
 					}
 				},
 				TimetableCard::Plane => {
@@ -282,7 +294,8 @@ impl InProgressGame {
 					player.lets_go_to_the_beach_active = true;
 				},
 				EventCard::ImagineTrains => {
-					
+					instantly_play_event_card = true;
+					player.imagine_if_trains_active = true;
 				},
 				EventCard::ConsiderVelocity => {
 					
@@ -352,9 +365,6 @@ impl InProgressGame {
 			player.event_cards.retain(|x| *x != event_card);
 
 			match event_card {
-				EventCard::ImagineTrains => {
-					
-				},
 				EventCard::ConsiderVelocity => {
 					
 				},

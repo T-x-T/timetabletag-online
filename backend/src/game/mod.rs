@@ -38,6 +38,7 @@ pub struct Player {
 	must_use_fastest_transport_for_rounds: u8,
 	luxembourg_is_germany_france_active: bool,
 	lets_go_to_the_beach_active: bool,
+	imagine_if_trains_active: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
