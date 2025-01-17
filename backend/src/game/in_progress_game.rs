@@ -297,14 +297,8 @@ impl InProgressGame {
 					instantly_play_event_card = true;
 					player.imagine_if_trains_active = true;
 				},
-				EventCard::ConsiderVelocity => {
-					
-				},
-				EventCard::ItsPopsicle => {
-					
-				},
 				EventCard::HydrateOrDiedrate => {
-					
+					instantly_play_event_card = true;
 				},
 				EventCard::StealthOutfit => {
 					
@@ -342,6 +336,7 @@ impl InProgressGame {
 				EventCard::SloveniaAsATreat => {
 					
 				},
+				_ => (),
 			}
 
 			self.in_progress_move.as_mut().unwrap().event_card_bought = true;
@@ -366,13 +361,10 @@ impl InProgressGame {
 
 			match event_card {
 				EventCard::ConsiderVelocity => {
-					
+					self.get_another_turn = true;
 				},
 				EventCard::ItsPopsicle => {
-					
-				},
-				EventCard::HydrateOrDiedrate => {
-					
+					self.get_another_turn = true;
 				},
 				EventCard::StealthOutfit => {
 					
@@ -418,12 +410,12 @@ impl InProgressGame {
 		//TODO: event card effects?
 		//TODO: throwing up to two timetable cards away
 		//TODO: runner gets 3 rounds head start with 3 chasers
- 
-		if move_made.finish_move && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
-			return Err(Box::new(crate::CustomError::ActionNotAllowed));
-		}
 		
 		if move_made.finish_move {
+			if !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
+				return Err(Box::new(crate::CustomError::ActionNotAllowed));
+			}
+
 			self.in_progress_move = None;
 
 			//Write next player into self.current_turn

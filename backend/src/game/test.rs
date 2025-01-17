@@ -2170,6 +2170,199 @@ mod make_move {
 			assert!(res.is_err());
 			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::InvalidNextLocation.to_string());
 		}
+		
+		#[test]
+		fn consider_velocity_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::ConsiderVelocity];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			let move_made = Move {
+				player_id: game.host,
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.host,
+				use_event_card: Some("consider_velocity".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("rennes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("le_havre".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotYourTurn.to_string());
+		}
+		
+		#[test]
+		fn its_popsicle_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::ItsPopsicle];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			let move_made = Move {
+				player_id: game.host,
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.host,
+				use_event_card: Some("its_popsicle".to_string()),
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("rennes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("le_havre".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::NotYourTurn.to_string());
+		}
+		
+		#[test]
+		fn hydrate_or_diedrate_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::HydrateOrDiedrate];
+
+			let move_made = Move {
+				player_id: game.current_turn,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			let move_made = Move {
+				player_id: game.host,
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+		}
 
 
 	}
