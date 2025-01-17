@@ -52,6 +52,14 @@ impl InProgressGame {
 		}
 
 		if player.lets_go_to_the_beach_active && move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_none() {
+			if !player.current_location.is_coastal() {
+				return Err(Box::new(crate::CustomError::InvalidNextLocation));
+			}
+
+			if !move_made.next_location_parsed.unwrap().is_coastal() {
+				return Err(Box::new(crate::CustomError::InvalidNextLocation));
+			}
+			
 			player.lets_go_to_the_beach_active = false;
 
 			player.current_location = move_made.next_location_parsed.unwrap();
