@@ -2364,6 +2364,58 @@ mod make_move {
 			assert!(res.is_ok());
 		}
 
+		
+		#[test]
+		fn stealth_outfit_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = player2;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::StealthOutfit];
+
+			let move_made = Move {
+				player_id: player2,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+
+			let move_made = Move {
+				player_id: player2,
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+			assert!(game.players.iter().find(|x| x.id == player2).unwrap().stealth_mode);
+			
+			game.current_turn = player2;
+			let move_made = Move {
+				player_id: player2,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: false,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made).unwrap();
+			assert!(!game.players.iter().find(|x| x.id == player2).unwrap().stealth_mode);
+		}
+
 
 	}
 

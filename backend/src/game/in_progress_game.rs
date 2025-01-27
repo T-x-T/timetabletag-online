@@ -48,7 +48,12 @@ impl InProgressGame {
 				new_location_already_sent: false,
 				use_timetable_card_already_sent: false,
 				event_card_bought: false,
+				stealth_mode_enabled: false,
 			});
+		}
+
+		if !self.in_progress_move.as_ref().unwrap().stealth_mode_enabled {
+			player.stealth_mode = false;
 		}
 
 		if player.lets_go_to_the_beach_active && move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_none() {
@@ -301,7 +306,9 @@ impl InProgressGame {
 					instantly_play_event_card = true;
 				},
 				EventCard::StealthOutfit => {
-					
+					instantly_play_event_card = true;
+					player.stealth_mode = true;
+					self.in_progress_move.as_mut().unwrap().stealth_mode_enabled = true;
 				},
 				EventCard::CardinalDirectionsAndVibes => {
 					
@@ -365,9 +372,6 @@ impl InProgressGame {
 				},
 				EventCard::ItsPopsicle => {
 					self.get_another_turn = true;
-				},
-				EventCard::StealthOutfit => {
-					
 				},
 				EventCard::CardinalDirectionsAndVibes => {
 					
@@ -480,6 +484,7 @@ pub struct InProgressMove {
 	pub new_location_already_sent: bool,
 	pub use_timetable_card_already_sent: bool,
 	pub event_card_bought: bool,
+	pub stealth_mode_enabled: bool,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize)]

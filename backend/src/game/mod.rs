@@ -39,6 +39,7 @@ pub struct Player {
 	luxembourg_is_germany_france_active: bool,
 	lets_go_to_the_beach_active: bool,
 	imagine_if_trains_active: bool,
+	stealth_mode: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
