@@ -116,6 +116,16 @@ impl InProgressGame {
 				player.must_use_fastest_transport_for_rounds -= 1;
 			}
 
+			if player.must_use_slowest_transport_for_rounds > 0 {
+				if player.timetable_cards.contains(&TimetableCard::LowSpeed) && move_made.use_timetable_card_parsed.as_ref().unwrap() != &TimetableCard::LowSpeed {
+					return Err(Box::new(crate::CustomError::YouAreCurrentlyInRatMode));
+				}
+				if !player.timetable_cards.contains(&TimetableCard::LowSpeed) && move_made.use_timetable_card_parsed.as_ref().unwrap() != &TimetableCard::HighSpeed {
+					return Err(Box::new(crate::CustomError::YouAreCurrentlyInRatMode));
+				}
+				player.must_use_slowest_transport_for_rounds -= 1;
+			}
+
 			match move_made.use_timetable_card_parsed.clone().unwrap() {
 				TimetableCard::LowSpeed => {
 					if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
@@ -345,10 +355,12 @@ impl InProgressGame {
 					self.coins_chasers += coins_for_chasers;
 				},
 				EventCard::RatMode => {
-					
+					instantly_play_event_card = true;
+					player.must_use_slowest_transport_for_rounds = 2;
 				},
 				EventCard::BingBong => {
-					
+					instantly_play_event_card = true;
+					//Bing Bong
 				},
 				EventCard::LeaveCountryImmediately => {
 					
@@ -400,12 +412,6 @@ impl InProgressGame {
 				},
 				EventCard::ItsPopsicle => {
 					self.get_another_turn = true;
-				},
-				EventCard::RatMode => {
-					
-				},
-				EventCard::BingBong => {
-					
 				},
 				EventCard::LeaveCountryImmediately => {
 					

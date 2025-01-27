@@ -36,6 +36,7 @@ pub struct Player {
 	timetable_cards: Vec<TimetableCard>,
 	event_cards: Vec<EventCard>,
 	must_use_fastest_transport_for_rounds: u8,
+	must_use_slowest_transport_for_rounds: u8,
 	luxembourg_is_germany_france_active: bool,
 	lets_go_to_the_beach_active: bool,
 	imagine_if_trains_active: bool,

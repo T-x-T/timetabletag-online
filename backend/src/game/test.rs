@@ -2477,6 +2477,80 @@ mod make_move {
 			assert!(game.coins_chasers > 5);
 			assert!(game.coins_runner > 5);
 		}
+		
+		#[test]
+		fn rat_mode_works() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let player3 = game.join("test_3".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.timetable_card_stack = vec![TimetableCard::Joker];
+			game.coins_chasers = 5;
+			game.coins_runner = 5;
+
+			game.players = vec![
+				Player { id: game.host, display_name: "test_1".to_string(), current_location: Location::Rennes, timetable_cards: vec![TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::LowSpeed, TimetableCard::HighSpeed], ..Default::default() },
+				Player { id: player2, display_name: "test_2".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+				Player { id: player3, display_name: "test_3".to_string(), current_location: Location::Nancy, timetable_cards: vec![TimetableCard::LowSpeed; 5], ..Default::default() },
+			];
+
+			game.event_card_stack = vec![EventCard::BingBong, EventCard::RatMode];
+
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("brest".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				buy_event_card: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made);
+
+			let move_made = Move {
+				player_id: game.host,
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made);
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_slowest_transport_for_rounds, 2);
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("nantes".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made);
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_slowest_transport_for_rounds, 1);
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("paris".to_string()),
+				use_timetable_card: Some("high_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_err());
+			assert_eq!(res.err().unwrap().to_string(), crate::CustomError::YouAreCurrentlyInRatMode.to_string());
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_slowest_transport_for_rounds, 1);
+
+			game.current_turn = game.host;
+			let move_made = Move {
+				player_id: game.host,
+				next_location: Some("la_rochelle".to_string()),
+				use_timetable_card: Some("low_speed".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let _ = game.make_move(move_made);
+			assert_eq!(game.players.iter().find(|x| x.id == game.host).unwrap().must_use_slowest_transport_for_rounds, 0);
+		}
 
 
 	}
