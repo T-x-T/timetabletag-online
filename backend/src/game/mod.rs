@@ -40,6 +40,7 @@ pub struct Player {
 	lets_go_to_the_beach_active: bool,
 	imagine_if_trains_active: bool,
 	stealth_mode: bool,
+	next_move_must_go_north: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]

@@ -72,16 +72,28 @@ impl InProgressGame {
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 		}
 
-		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() {
-			if self.in_progress_move.as_ref().unwrap().new_location_already_sent {
-				return Err(Box::new(crate::CustomError::AlreadyMoved));
-			}
+		if player.next_move_must_go_north && player.current_location.get_north_connections().is_empty() {
+			player.current_location = move_made.next_location_parsed.unwrap();
+			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
+			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 
+			player.next_move_must_go_north = false;
+		}
+
+		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
 			if !self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
 				return Err(Box::new(crate::CustomError::MissingTimetableCard));
 			}
 
 			let current_location = player.current_location;
+
+			if player.next_move_must_go_north {
+				if !current_location.get_north_connections().contains(move_made.next_location_parsed.as_ref().unwrap()) {
+					return Err(Box::new(crate::CustomError::YouMustGoNorth));
+				} else {
+					player.next_move_must_go_north = false;
+				}
+			}
 
 			if player.must_use_fastest_transport_for_rounds > 0 {
 				match move_made.use_timetable_card_parsed.as_ref().unwrap() {
@@ -311,7 +323,8 @@ impl InProgressGame {
 					self.in_progress_move.as_mut().unwrap().stealth_mode_enabled = true;
 				},
 				EventCard::CardinalDirectionsAndVibes => {
-					
+					instantly_play_event_card = true;
+					player.next_move_must_go_north = true;
 				},
 				EventCard::Pizzazz => {
 					
@@ -372,9 +385,6 @@ impl InProgressGame {
 				},
 				EventCard::ItsPopsicle => {
 					self.get_another_turn = true;
-				},
-				EventCard::CardinalDirectionsAndVibes => {
-					
 				},
 				EventCard::Pizzazz => {
 					
