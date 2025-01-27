@@ -78,6 +78,10 @@ in_progress:
 	"runner_current_country": "" //contains the last known country the runner was in, revealed through buying powerups
 	"runner_destination": "" //contains the destination the runner need to get to, revealed through buying powerups
 	"chaser_gets_another_turn": false, //is true when a chaser gets another turn after buying the powerup chaser_gets_two_turns
+	"chaser_locations": {
+		"ExxPlore": "Paris",
+		"TheTxT": "Stuttgart",
+	}
 }
 ```
 
