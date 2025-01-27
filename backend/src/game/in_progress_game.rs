@@ -327,7 +327,22 @@ impl InProgressGame {
 					player.next_move_must_go_north = true;
 				},
 				EventCard::Pizzazz => {
-					
+					instantly_play_event_card = true;
+					let mut rng = thread_rng();
+					let coins_for_runner = rng.gen_range(1..=6);
+					let mut coins_for_chasers = 0;
+					for _ in 0..self.players.len() - 1 {
+						coins_for_chasers += rng.gen_range(1..=6);
+					}
+
+					if self.runner == player.id {
+						move_result.coins_received = Some(coins_for_runner);
+					} else {
+						move_result.coins_received = Some(coins_for_chasers);
+					}
+
+					self.coins_runner += coins_for_runner;
+					self.coins_chasers += coins_for_chasers;
 				},
 				EventCard::RatMode => {
 					
@@ -385,9 +400,6 @@ impl InProgressGame {
 				},
 				EventCard::ItsPopsicle => {
 					self.get_another_turn = true;
-				},
-				EventCard::Pizzazz => {
-					
 				},
 				EventCard::RatMode => {
 					
