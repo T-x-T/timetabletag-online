@@ -53,7 +53,7 @@ impl InProgressGame {
 		}
 
 		if !self.in_progress_move.as_ref().unwrap().stealth_mode_enabled {
-			player.stealth_mode = false;
+			player.stealth_mode_active = false;
 		}
 
 		if player.lets_go_to_the_beach_active && move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_none() {
@@ -72,12 +72,29 @@ impl InProgressGame {
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 		}
 
-		if player.next_move_must_go_north && player.current_location.get_north_connections().is_empty() {
+		if player.next_move_must_go_north_active && player.current_location.get_north_connections().is_empty() {
 			player.current_location = move_made.next_location_parsed.unwrap();
 			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
 			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
 
-			player.next_move_must_go_north = false;
+			player.next_move_must_go_north_active = false;
+		}
+
+		if move_made.next_location_parsed.is_some() && player.zug_faellt_aus_active && Country::from(player.current_location) == Country::Germany {
+			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
+			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+
+			player.zug_faellt_aus_active = false;
+		}
+
+		if player.slovenia_as_a_treat_active && move_made.next_location_parsed.is_some() {
+			player.slovenia_as_a_treat_active = false;
+
+			if move_made.next_location_parsed.unwrap() == Location::Ljubljana {
+				self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
+				self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+				player.current_location = Location::Ljubljana;
+			}
 		}
 
 		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
@@ -87,11 +104,57 @@ impl InProgressGame {
 
 			let current_location = player.current_location;
 
-			if player.next_move_must_go_north {
+			if player.leave_country_immediately_active {
+				let mut can_leave_country = false;
+				for timetable_card in &player.timetable_cards {
+					match timetable_card {
+						TimetableCard::LowSpeed => {
+							for connection in player.current_location.get_low_speed_connections() {
+								if Country::from(connection) != Country::from(player.current_location) {
+									can_leave_country = true;
+								}
+							}
+						},
+						TimetableCard::HighSpeed => {
+							for connection in player.current_location.get_high_speed_connections() {
+								if Country::from(connection) != Country::from(player.current_location) {
+									can_leave_country = true;
+								}
+							}
+						},
+						TimetableCard::Plane => {
+							for connection in player.current_location.get_plane_connections() {
+								if Country::from(connection) != Country::from(player.current_location) {
+									can_leave_country = true;
+								}
+							}
+						},
+						TimetableCard::Joker => {
+							for connection in player.current_location.get_joker_connections() {
+								if Country::from(connection) != Country::from(player.current_location) {
+									can_leave_country = true;
+								}
+							}
+						},
+					}
+				}
+
+				if can_leave_country {
+					if Country::from(player.current_location) != Country::from(move_made.next_location_parsed.unwrap()) {
+						player.leave_country_immediately_active = false;
+					} else {
+						return Err(Box::new(crate::CustomError::YouMustLeaveTheCountryImmediately));
+					}
+				} else {
+					player.leave_country_immediately_active = false;
+				}
+			}
+
+			if player.next_move_must_go_north_active {
 				if !current_location.get_north_connections().contains(move_made.next_location_parsed.as_ref().unwrap()) {
 					return Err(Box::new(crate::CustomError::YouMustGoNorth));
 				} else {
-					player.next_move_must_go_north = false;
+					player.next_move_must_go_north_active = false;
 				}
 			}
 
@@ -329,12 +392,12 @@ impl InProgressGame {
 				},
 				EventCard::StealthOutfit => {
 					instantly_play_event_card = true;
-					player.stealth_mode = true;
+					player.stealth_mode_active = true;
 					self.in_progress_move.as_mut().unwrap().stealth_mode_enabled = true;
 				},
 				EventCard::CardinalDirectionsAndVibes => {
 					instantly_play_event_card = true;
-					player.next_move_must_go_north = true;
+					player.next_move_must_go_north_active = true;
 				},
 				EventCard::Pizzazz => {
 					instantly_play_event_card = true;
@@ -363,25 +426,29 @@ impl InProgressGame {
 					//Bing Bong
 				},
 				EventCard::LeaveCountryImmediately => {
-					
+					instantly_play_event_card = true;
+					player.leave_country_immediately_active = true;
 				},
 				EventCard::ZugFaelltAus => {
-					
+					instantly_play_event_card = true;
+					player.zug_faellt_aus_active = true;
 				},
 				EventCard::SnackZone => {
-					
+					instantly_play_event_card = true;
 				},
 				EventCard::ItsAllInTheTrees => {
-					
+					instantly_play_event_card = true;
+					self.get_another_turn = true;
 				},
 				EventCard::BonjourToEveryone => {
-					
+					instantly_play_event_card = true;
 				},
 				EventCard::NoTalk => {
-					
+					instantly_play_event_card = true;
 				},
 				EventCard::SloveniaAsATreat => {
-					
+					instantly_play_event_card = true;
+					player.slovenia_as_a_treat_active = true;
 				},
 				_ => (),
 			}
@@ -413,35 +480,13 @@ impl InProgressGame {
 				EventCard::ItsPopsicle => {
 					self.get_another_turn = true;
 				},
-				EventCard::LeaveCountryImmediately => {
-					
-				},
-				EventCard::ZugFaelltAus => {
-					
-				},
-				EventCard::SnackZone => {
-					
-				},
-				EventCard::ItsAllInTheTrees => {
-					
-				},
-				EventCard::BonjourToEveryone => {
-					
-				},
-				EventCard::NoTalk => {
-					
-				},
-				EventCard::SloveniaAsATreat => {
-					
-				},
 				_ => (),
 			}
 		}
 
-		//TODO: use event card
-		//TODO: event card effects?
 		//TODO: throwing up to two timetable cards away
 		//TODO: runner gets 3 rounds head start with 3 chasers
+		//TODO: dont apply any effects when returning an error (only persist changes to game state at the very end of the turn logic)
 		
 		if move_made.finish_move {
 			if !self.in_progress_move.as_ref().unwrap().new_location_already_sent {

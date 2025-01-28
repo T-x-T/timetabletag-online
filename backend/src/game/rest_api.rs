@@ -116,7 +116,7 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 							runner_current_location: if game.power_up_status.runner_location.is_some() {game.power_up_status.runner_location.unwrap().to_string()} else {String::default()},
 							runner_destination: if game.power_up_status.runner_destination.is_some() {game.power_up_status.runner_destination.unwrap().to_string()} else {String::default()},
 							chaser_gets_another_turn: game.power_up_status.get_another_turn,
-							chaser_locations: game.players.iter().filter(|x| x.id != game.runner || !x.stealth_mode).map(|x| (x.display_name.clone(), x.current_location.to_string())).collect()
+							chaser_locations: game.players.iter().filter(|x| x.id != game.runner || !x.stealth_mode_active).map(|x| (x.display_name.clone(), x.current_location.to_string())).collect()
 						}),
 						Game::Finished(game) => serde_json::to_string(game),
 					}.unwrap();

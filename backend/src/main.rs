@@ -33,6 +33,7 @@ pub enum CustomError {
   YouMustGoToGermanyOrFrance,
   YouMustGoNorth,
   YouAreCurrentlyInRatMode,
+  YouMustLeaveTheCountryImmediately,
 }
 
 impl std::fmt::Display for CustomError {
@@ -55,7 +56,8 @@ impl std::fmt::Display for CustomError {
       CustomError::YoureCurrentlyHuntedByMenForSport => write!(f, "you're currently hunted by men for sport. You are very scared and must use your fastest method of transport"),
       CustomError::YouMustGoToGermanyOrFrance => write!(f, "what is luxembourg if not germany-france? You must go to either germany or france in your current turn!"),
       CustomError::YouMustGoNorth => write!(f, "you're currently navigating on cardinal directions and vibes and thus must go north!"),
-      CustomError::YouAreCurrentlyInRatMode => write!(f, "you're currently in rat mode! You have to use the slowest possible transport method.")
+      CustomError::YouAreCurrentlyInRatMode => write!(f, "you're currently in rat mode! You have to use the slowest possible transport method."),
+      CustomError::YouMustLeaveTheCountryImmediately => write!(f, "you must leave the country immediately!"),
     }
   }
 }

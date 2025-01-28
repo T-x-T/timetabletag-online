@@ -40,8 +40,11 @@ pub struct Player {
 	luxembourg_is_germany_france_active: bool,
 	lets_go_to_the_beach_active: bool,
 	imagine_if_trains_active: bool,
-	stealth_mode: bool,
-	next_move_must_go_north: bool,
+	stealth_mode_active: bool,
+	next_move_must_go_north_active: bool,
+	leave_country_immediately_active: bool,
+	zug_faellt_aus_active: bool,
+	slovenia_as_a_treat_active: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
