@@ -252,7 +252,7 @@ mod make_move {
 			];
 
 			game.current_turn = game.host;
-			game.get_another_turn = false;
+			game.get_extra_turns = 0;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -281,7 +281,7 @@ mod make_move {
 			];
 
 			game.current_turn = game.host;
-			game.get_another_turn = false;
+			game.get_extra_turns = 0;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -318,7 +318,7 @@ mod make_move {
 			];
 
 			game.current_turn = game.host;
-			game.get_another_turn = false;
+			game.get_extra_turns = 0;
 
 			let move_made = Move {
 				player_id: game.host,
@@ -379,6 +379,55 @@ mod make_move {
 				player_id: game.host,
 				use_timetable_card: Some("low_speed".to_string()),
 				next_location: Some("le_havre".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			assert_eq!(game.current_turn, player2);
+		}
+
+		#[test]
+		fn runner_gets_three_turns_at_start_with_4_players() {
+			let mut game = Lobby::create("test_1".to_string());
+			let player2 = game.join("test_2".to_string()).unwrap();
+			let _ = game.join("test_3".to_string()).unwrap();
+			let _ = game.join("test_4".to_string()).unwrap();
+			let mut game = game.start(game.host).unwrap();
+
+			game.current_turn = game.host;
+			game.runner = game.host;
+			game.players = game.players.clone().into_iter().map(|mut x| {
+				x.timetable_cards = vec![TimetableCard::LowSpeed; 5];
+				return x;
+			}).collect();
+			game.timetable_card_stack = vec![TimetableCard::LowSpeed; 10];
+
+			let move_made = Move {
+				player_id: game.host,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("paris".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("le_havre".to_string()),
+				finish_move: true,
+				..Default::default()
+			};
+			let res = game.make_move(move_made);
+			assert!(res.is_ok());
+
+			let move_made = Move {
+				player_id: game.host,
+				use_timetable_card: Some("low_speed".to_string()),
+				next_location: Some("rennes".to_string()),
 				finish_move: true,
 				..Default::default()
 			};
@@ -1220,7 +1269,7 @@ mod make_move {
 			};
 			let res = game.make_move(move_made).unwrap();
 			assert!(res.power_up_status.get_another_turn);
-			assert!(game.get_another_turn);
+			assert_eq!(game.get_extra_turns, 1);
 
 
 			let move_made = Move {
@@ -1243,7 +1292,7 @@ mod make_move {
 			};
 			let res = game.make_move(move_made);
 
-			assert!(!game.get_another_turn);
+			assert_eq!(game.get_extra_turns, 0);
 			assert!(res.is_ok());
 			assert_eq!(game.current_turn, player3);
 		}

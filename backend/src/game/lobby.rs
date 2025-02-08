@@ -78,7 +78,7 @@ impl Lobby {
 			timetable_card_stack: generate_timetable_card_stack(),
 			event_card_stack: generate_event_card_stack(),
 			power_up_status: PowerupStatus::default(),
-			get_another_turn: true,
+			get_extra_turns: if self.players.len() == 3 {1} else {2},
 		};		
 
 		game.players = self.players.clone().into_iter().map(|mut x| {

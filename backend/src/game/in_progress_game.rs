@@ -20,7 +20,7 @@ pub struct InProgressGame {
 	pub timetable_card_stack: Vec<TimetableCard>,
 	pub event_card_stack: Vec<EventCard>,
 	pub power_up_status: PowerupStatus,
-	pub get_another_turn: bool,
+	pub get_extra_turns: u8,
 }
 
 impl InProgressGame {
@@ -274,7 +274,7 @@ impl InProgressGame {
 					return Err(Box::new(crate::CustomError::YouMustGoToGermanyOrFrance));
 				} else {
 					player.luxembourg_is_germany_france_active = false;
-					self.get_another_turn = true;
+					self.get_extra_turns = 1;
 				}
 			}
 
@@ -347,7 +347,7 @@ impl InProgressGame {
 				},
 				Powerup::ChaserGetsTwoTurns => {
 					move_result.power_up_status.get_another_turn = true;
-					self.get_another_turn = true;
+					self.get_extra_turns = 1;
 				},
 				Powerup::LearnRunnerDestination => {
 					move_result.power_up_status.runner_destination = Some(self.destination);
@@ -479,7 +479,7 @@ impl InProgressGame {
 				},
 				EventCard::ItsAllInTheTrees => {
 					instantly_play_event_card = true;
-					self.get_another_turn = true;
+					self.get_extra_turns = 1;
 				},
 				EventCard::BonjourToEveryone => {
 					instantly_play_event_card = true;
@@ -516,16 +516,15 @@ impl InProgressGame {
 
 			match event_card {
 				EventCard::ConsiderVelocity => {
-					self.get_another_turn = true;
+					self.get_extra_turns = 1;
 				},
 				EventCard::ItsPopsicle => {
-					self.get_another_turn = true;
+					self.get_extra_turns = 1;
 				},
 				_ => (),
 			}
 		}
 
-		//TODO: runner gets 3 rounds head start with 3 chasers
 		//TODO: dont apply any effects when returning an error (only persist changes to game state at the very end of the turn logic)
 		
 		if move_made.finish_move {
@@ -536,15 +535,16 @@ impl InProgressGame {
 			self.in_progress_move = None;
 
 			//Write next player into self.current_turn
-			if !self.get_another_turn {
+			if self.get_extra_turns == 0 {
 				let current_players_position = self.players.iter().position(|x| x.id == move_made.player_id).unwrap();
 				if current_players_position == self.players.len() - 1 {
 					self.current_turn = self.players.first().unwrap().id;
 				} else {
 					self.current_turn = self.players.iter().nth(current_players_position + 1).unwrap().id;
 				}
+			} else {
+				self.get_extra_turns -= 1;
 			}
-			self.get_another_turn = false;
 		}
 
 		self.players = self.players.clone().into_iter().map(|mut x| {
