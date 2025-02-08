@@ -25,7 +25,13 @@ impl Display for TimetableCard {
 
 impl std::convert::From<String> for TimetableCard {
 	fn from(value: String) -> Self {
-		match value.as_str() {
+		return value.as_str().into();
+	}
+}
+
+impl std::convert::From<&str> for TimetableCard {
+	fn from(value: &str) -> Self {
+		match value {
 			"low_speed" => TimetableCard::LowSpeed,
 			"high_speed" => TimetableCard::HighSpeed,
 			"plane" => TimetableCard::Plane,

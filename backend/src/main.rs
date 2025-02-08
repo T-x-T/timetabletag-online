@@ -34,6 +34,8 @@ pub enum CustomError {
   YouMustGoNorth,
   YouAreCurrentlyInRatMode,
   YouMustLeaveTheCountryImmediately,
+  ValidMovePossible,
+  ThrewTooManyTimetableCardsAway,
 }
 
 impl std::fmt::Display for CustomError {
@@ -45,7 +47,7 @@ impl std::fmt::Display for CustomError {
       CustomError::ActionNotAllowed => write!(f, "you are not allowed to do what you just tried to do"),
       CustomError::NotYourTurn => write!(f, "it's not your turn"),
       CustomError::InvalidNextLocation => write!(f, "you actually can't get to the chosen next location"),
-      CustomError::MissingTimetableCard => write!(f, "you don't have the card you're trying to play"),
+      CustomError::MissingTimetableCard => write!(f, "you don't have the card you're trying to use"),
       CustomError::AlreadyMoved => write!(f, "you already moved in your current turn"),
       CustomError::NotEnoughCoins => write!(f, "you don't have enough coins"),
       CustomError::EventCardNoLocationSent => write!(f, "you need to send a new location before buying an event card"),
@@ -58,6 +60,8 @@ impl std::fmt::Display for CustomError {
       CustomError::YouMustGoNorth => write!(f, "you're currently navigating on cardinal directions and vibes and thus must go north!"),
       CustomError::YouAreCurrentlyInRatMode => write!(f, "you're currently in rat mode! You have to use the slowest possible transport method."),
       CustomError::YouMustLeaveTheCountryImmediately => write!(f, "you must leave the country immediately!"),
+      CustomError::ValidMovePossible => write!(f, "you still have at least one valid move"),
+      CustomError::ThrewTooManyTimetableCardsAway => write!(f, "you are only allowed to throw up to two timetable cards away"),
     }
   }
 }

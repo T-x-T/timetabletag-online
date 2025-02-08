@@ -44,12 +44,53 @@ impl InProgressGame {
 		
 		if self.in_progress_move.is_none() {
 			self.in_progress_move = Some(InProgressMove {
-				move_data: move_made.clone(),
 				new_location_already_sent: false,
 				use_timetable_card_already_sent: false,
 				event_card_bought: false,
 				stealth_mode_enabled: false,
 			});
+		}
+
+		if !move_made.throw_timetable_cards_away.is_empty() {
+			let mut move_possible = false;
+
+			for timetable_card in &player.timetable_cards {
+				match timetable_card {
+					TimetableCard::LowSpeed => move_possible = !player.current_location.get_low_speed_connections().is_empty(),
+					TimetableCard::HighSpeed => move_possible = !player.current_location.get_high_speed_connections().is_empty(),
+					TimetableCard::Plane => move_possible = !player.current_location.get_plane_connections().is_empty(),
+					TimetableCard::Joker => move_possible = !player.current_location.get_joker_connections().is_empty(),
+				}
+
+				if move_possible {
+					break;
+				}
+			}
+
+			if move_possible {
+				return Err(Box::new(crate::CustomError::ValidMovePossible));
+			}
+
+			if move_made.throw_timetable_cards_away.len() > 2 {
+				return Err(Box::new(crate::CustomError::ThrewTooManyTimetableCardsAway));
+			}
+
+			let orig_player_timetable_cards = player.timetable_cards.clone();
+			for timetable_card in &move_made.throw_timetable_cards_away {
+				if orig_player_timetable_cards.contains(&timetable_card.as_str().into()) {
+					player = remove_used_timetable_card_from_player(player, &timetable_card.as_str().into());
+
+					if !self.timetable_card_stack.is_empty() {
+						let timetable_card = self.timetable_card_stack.pop().unwrap();
+						move_result.timetable_cards_received.push(timetable_card.clone());
+						
+						player.timetable_cards.push(timetable_card);
+					}
+
+				} else {
+					return Err(Box::new(crate::CustomError::MissingTimetableCard));
+				}
+			}
 		}
 
 		if !self.in_progress_move.as_ref().unwrap().stealth_mode_enabled {
@@ -277,9 +318,9 @@ impl InProgressGame {
 
 			if !self.timetable_card_stack.is_empty() {
 				let timetable_card = self.timetable_card_stack.pop().unwrap();
-				move_result.timetable_cards_received = vec![timetable_card.clone()];
+				move_result.timetable_cards_received.push(timetable_card.clone());
 				
-				player.timetable_cards.push(timetable_card.clone());
+				player.timetable_cards.push(timetable_card);
 			}
 
 			player.current_location = move_made.next_location_parsed.unwrap();
@@ -484,7 +525,6 @@ impl InProgressGame {
 			}
 		}
 
-		//TODO: throwing up to two timetable cards away
 		//TODO: runner gets 3 rounds head start with 3 chasers
 		//TODO: dont apply any effects when returning an error (only persist changes to game state at the very end of the turn logic)
 		
@@ -553,7 +593,6 @@ pub struct Move {
 
 #[derive(Debug, Clone, Default)]
 pub struct InProgressMove {
-	pub move_data: Move,
 	pub new_location_already_sent: bool,
 	pub use_timetable_card_already_sent: bool,
 	pub event_card_bought: bool,
