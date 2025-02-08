@@ -39,7 +39,7 @@ pub struct Player {
 	must_use_slowest_transport_for_rounds: u8,
 	luxembourg_is_germany_france_active: bool,
 	lets_go_to_the_beach_active: bool,
-	imagine_if_trains_active: bool,
+	can_use_any_train_ticket: bool,
 	stealth_mode_active: bool,
 	next_move_must_go_north_active: bool,
 	leave_country_immediately_active: bool,

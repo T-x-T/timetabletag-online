@@ -52,22 +52,7 @@ impl InProgressGame {
 		}
 
 		if !move_made.throw_timetable_cards_away.is_empty() {
-			let mut move_possible = false;
-
-			for timetable_card in &player.timetable_cards {
-				match timetable_card {
-					TimetableCard::LowSpeed => move_possible = !player.current_location.get_low_speed_connections().is_empty(),
-					TimetableCard::HighSpeed => move_possible = !player.current_location.get_high_speed_connections().is_empty(),
-					TimetableCard::Plane => move_possible = !player.current_location.get_plane_connections().is_empty(),
-					TimetableCard::Joker => move_possible = !player.current_location.get_joker_connections().is_empty(),
-				}
-
-				if move_possible {
-					break;
-				}
-			}
-
-			if move_possible {
+			if is_move_possible(&player) {
 				return Err(Box::new(crate::CustomError::ValidMovePossible));
 			}
 
@@ -146,41 +131,7 @@ impl InProgressGame {
 			let current_location = player.current_location;
 
 			if player.leave_country_immediately_active {
-				let mut can_leave_country = false;
-				for timetable_card in &player.timetable_cards {
-					match timetable_card {
-						TimetableCard::LowSpeed => {
-							for connection in player.current_location.get_low_speed_connections() {
-								if Country::from(connection) != Country::from(player.current_location) {
-									can_leave_country = true;
-								}
-							}
-						},
-						TimetableCard::HighSpeed => {
-							for connection in player.current_location.get_high_speed_connections() {
-								if Country::from(connection) != Country::from(player.current_location) {
-									can_leave_country = true;
-								}
-							}
-						},
-						TimetableCard::Plane => {
-							for connection in player.current_location.get_plane_connections() {
-								if Country::from(connection) != Country::from(player.current_location) {
-									can_leave_country = true;
-								}
-							}
-						},
-						TimetableCard::Joker => {
-							for connection in player.current_location.get_joker_connections() {
-								if Country::from(connection) != Country::from(player.current_location) {
-									can_leave_country = true;
-								}
-							}
-						},
-					}
-				}
-
-				if can_leave_country {
+				if player_can_leave_country(&player) {
 					if Country::from(player.current_location) != Country::from(move_made.next_location_parsed.unwrap()) {
 						player.leave_country_immediately_active = false;
 					} else {
@@ -200,69 +151,23 @@ impl InProgressGame {
 			}
 
 			if player.must_use_fastest_transport_for_rounds > 0 {
-				match move_made.use_timetable_card_parsed.as_ref().unwrap() {
-					TimetableCard::LowSpeed => {
-						if !current_location.get_high_speed_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::HighSpeed) || player.timetable_cards.contains(&TimetableCard::Joker)) {
-							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
-						}
-						if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
-							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
-						}
-					},
-					TimetableCard::HighSpeed => {
-						if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
-							return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
-						}
-					},
-					_ => (),
-				};
+				if !player_used_fastest_transport_method(move_made.use_timetable_card_parsed.as_ref().unwrap(), &player, current_location){
+					return Err(Box::new(crate::CustomError::YoureCurrentlyHuntedByMenForSport));
+				}
 
 				player.must_use_fastest_transport_for_rounds -= 1;
 			}
 
 			if player.must_use_slowest_transport_for_rounds > 0 {
-				if player.timetable_cards.contains(&TimetableCard::LowSpeed) && move_made.use_timetable_card_parsed.as_ref().unwrap() != &TimetableCard::LowSpeed {
+				if !player_used_slowest_transport_method(move_made.use_timetable_card_parsed.as_ref().unwrap(), &player) {
 					return Err(Box::new(crate::CustomError::YouAreCurrentlyInRatMode));
 				}
-				if !player.timetable_cards.contains(&TimetableCard::LowSpeed) && move_made.use_timetable_card_parsed.as_ref().unwrap() != &TimetableCard::HighSpeed {
-					return Err(Box::new(crate::CustomError::YouAreCurrentlyInRatMode));
-				}
+
 				player.must_use_slowest_transport_for_rounds -= 1;
 			}
 
-			match move_made.use_timetable_card_parsed.clone().unwrap() {
-				TimetableCard::LowSpeed => {
-					if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						if player.imagine_if_trains_active {
-							if !current_location.get_high_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-								return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-							}
-						} else {
-							return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-						}
-					}
-				},
-				TimetableCard::HighSpeed => {
-					if !current_location.get_high_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						if player.imagine_if_trains_active {
-							if !current_location.get_low_speed_connections().contains(&move_made.next_location_parsed.unwrap()) {
-								return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-							}
-						} else {
-							return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-						}
-					}
-				},
-				TimetableCard::Plane => {
-					if !current_location.get_plane_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-					}
-				},
-				TimetableCard::Joker => {
-					if !current_location.get_joker_connections().contains(&move_made.next_location_parsed.unwrap()) {
-						return Err(Box::new(crate::CustomError::InvalidNextLocation));	
-					}
-				},
+			if !can_get_to_next_location_with_used_timetable_card(move_made.use_timetable_card_parsed.as_ref().unwrap(), &player, &current_location, move_made.next_location_parsed.as_ref().unwrap()) {
+				return Err(Box::new(crate::CustomError::InvalidNextLocation));
 			}
 
 			if player_wants_to_move_space_occupied_by_chaser(&self.players, self.runner, move_made.next_location_parsed.unwrap()) {
@@ -426,7 +331,7 @@ impl InProgressGame {
 				},
 				EventCard::ImagineTrains => {
 					instantly_play_event_card = true;
-					player.imagine_if_trains_active = true;
+					player.can_use_any_train_ticket = true;
 				},
 				EventCard::HydrateOrDiedrate => {
 					instantly_play_event_card = true;
@@ -556,6 +461,132 @@ impl InProgressGame {
 
 		return Ok(move_result);
 	}
+}
+
+fn can_get_to_next_location_with_used_timetable_card(used_timetable_card: &TimetableCard, player: &Player, current_location: &Location, next_location: &Location) -> bool {
+	match used_timetable_card {
+		TimetableCard::LowSpeed => {
+			if !current_location.get_low_speed_connections().contains(next_location) {
+				if player.can_use_any_train_ticket {
+					if !current_location.get_high_speed_connections().contains(next_location) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		},
+		TimetableCard::HighSpeed => {
+			if !current_location.get_high_speed_connections().contains(next_location) {
+				if player.can_use_any_train_ticket {
+					if !current_location.get_low_speed_connections().contains(next_location) {
+						return false;
+					}
+				} else {
+					return false;	
+				}
+			}
+		},
+		TimetableCard::Plane => {
+			if !current_location.get_plane_connections().contains(next_location) {
+				return false;	
+			}
+		},
+		TimetableCard::Joker => {
+			if !current_location.get_joker_connections().contains(next_location) {
+				return false;	
+			}
+		},
+	}
+
+	return true;
+}
+
+fn player_used_slowest_transport_method(used_timetable_card: &TimetableCard, player: &Player) -> bool {
+	let mut player_used_slowest_transport_method = true;
+	if player.timetable_cards.contains(&TimetableCard::LowSpeed) && used_timetable_card != &TimetableCard::LowSpeed {
+		player_used_slowest_transport_method = false;
+	}
+	if !player.timetable_cards.contains(&TimetableCard::LowSpeed) && used_timetable_card != &TimetableCard::HighSpeed {
+		player_used_slowest_transport_method = false;
+	}
+	return player_used_slowest_transport_method;
+}
+
+fn player_used_fastest_transport_method(used_timetable_card: &TimetableCard, player: &Player, current_location: Location) -> bool {
+	let mut player_used_fastest_transport_method = true;
+	match used_timetable_card {
+		TimetableCard::LowSpeed => {
+			if !current_location.get_high_speed_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::HighSpeed) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+				player_used_fastest_transport_method = false;
+			}
+			if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+				player_used_fastest_transport_method = false;
+			}
+		},
+		TimetableCard::HighSpeed => {
+			if !current_location.get_plane_connections().is_empty() && (player.timetable_cards.contains(&TimetableCard::Plane) || player.timetable_cards.contains(&TimetableCard::Joker)) {
+				player_used_fastest_transport_method = false;
+			}
+		},
+		_ => (),
+	};
+	return player_used_fastest_transport_method;
+}
+
+fn player_can_leave_country(player: &Player) -> bool {
+	let mut can_leave_country = false;
+	for timetable_card in &player.timetable_cards {
+		match timetable_card {
+			TimetableCard::LowSpeed => {
+				for connection in player.current_location.get_low_speed_connections() {
+					if Country::from(connection) != Country::from(player.current_location) {
+						can_leave_country = true;
+					}
+				}
+			},
+			TimetableCard::HighSpeed => {
+				for connection in player.current_location.get_high_speed_connections() {
+					if Country::from(connection) != Country::from(player.current_location) {
+						can_leave_country = true;
+					}
+				}
+			},
+			TimetableCard::Plane => {
+				for connection in player.current_location.get_plane_connections() {
+					if Country::from(connection) != Country::from(player.current_location) {
+						can_leave_country = true;
+					}
+				}
+			},
+			TimetableCard::Joker => {
+				for connection in player.current_location.get_joker_connections() {
+					if Country::from(connection) != Country::from(player.current_location) {
+						can_leave_country = true;
+					}
+				}
+			},
+		}
+	}
+	return can_leave_country;
+}
+
+fn is_move_possible(player: &Player) -> bool {
+	let mut move_possible = false;
+
+	for timetable_card in &player.timetable_cards {
+		match timetable_card {
+			TimetableCard::LowSpeed => move_possible = !player.current_location.get_low_speed_connections().is_empty(),
+			TimetableCard::HighSpeed => move_possible = !player.current_location.get_high_speed_connections().is_empty(),
+			TimetableCard::Plane => move_possible = !player.current_location.get_plane_connections().is_empty(),
+			TimetableCard::Joker => move_possible = !player.current_location.get_joker_connections().is_empty(),
+		}
+
+		if move_possible {
+			break;
+		}
+	}
+	return move_possible;
 }
 
 fn player_wants_to_move_space_occupied_by_chaser(players: &Vec<Player>, runner: PlayerId, next_location: Location) -> bool {
