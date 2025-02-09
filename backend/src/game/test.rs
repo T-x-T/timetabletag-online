@@ -1602,7 +1602,7 @@ mod make_move {
 		}
 	}
 
-	mod use_even_card {
+	mod use_event_card {
 		use super::*;
 
 		#[test]
@@ -2899,6 +2899,7 @@ mod make_move {
 			let move_made = Move {
 				player_id: game.current_turn,
 				throw_timetable_cards_away: vec!["plane".to_string(), "high_speed".to_string()],
+				finish_move: true,
 				..Default::default()
 			};
 			let res = game.make_move(move_made);

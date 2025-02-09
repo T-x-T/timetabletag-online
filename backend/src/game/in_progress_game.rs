@@ -42,14 +42,28 @@ impl InProgressGame {
 			move_made.use_timetable_card_parsed = Some(TimetableCard::from(move_made.use_timetable_card.clone().unwrap()))
 		}
 		
+		
+		let mut in_progress_move: InProgressMove;
 		if self.in_progress_move.is_none() {
-			self.in_progress_move = Some(InProgressMove {
+			in_progress_move = InProgressMove {
 				new_location_already_sent: false,
 				use_timetable_card_already_sent: false,
 				event_card_bought: false,
 				stealth_mode_enabled: false,
-			});
+			};
+		} else {
+			in_progress_move = self.in_progress_move.clone().unwrap();
 		}
+
+		let mut timetable_card_stack = self.timetable_card_stack.clone();
+		let mut get_extra_turns = self.get_extra_turns;
+		let mut coins_chasers = self.coins_chasers;
+		let mut coins_runner = self.coins_runner;
+		let mut last_used_timetable_card = self.last_used_timetable_card.clone();
+		let mut runner_path = self.runner_path.clone();
+		let mut players = self.players.clone();
+		let mut event_card_bought = self.event_card_bought;
+		let mut event_card_stack = self.event_card_stack.clone();
 
 		if !move_made.throw_timetable_cards_away.is_empty() {
 			if is_move_possible(&player) {
@@ -65,8 +79,8 @@ impl InProgressGame {
 				if orig_player_timetable_cards.contains(&timetable_card.as_str().into()) {
 					player = remove_used_timetable_card_from_player(player, &timetable_card.as_str().into());
 
-					if !self.timetable_card_stack.is_empty() {
-						let timetable_card = self.timetable_card_stack.pop().unwrap();
+					if !timetable_card_stack.is_empty() {
+						let timetable_card = timetable_card_stack.pop().unwrap();
 						move_result.timetable_cards_received.push(timetable_card.clone());
 						
 						player.timetable_cards.push(timetable_card);
@@ -76,9 +90,11 @@ impl InProgressGame {
 					return Err(Box::new(crate::CustomError::MissingTimetableCard));
 				}
 			}
+
+			in_progress_move.new_location_already_sent = true;
 		}
 
-		if !self.in_progress_move.as_ref().unwrap().stealth_mode_enabled {
+		if !in_progress_move.stealth_mode_enabled {
 			player.stealth_mode_active = false;
 		}
 
@@ -94,21 +110,21 @@ impl InProgressGame {
 			player.lets_go_to_the_beach_active = false;
 
 			player.current_location = move_made.next_location_parsed.unwrap();
-			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
-			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+			in_progress_move.new_location_already_sent = true;
+			in_progress_move.use_timetable_card_already_sent = true;
 		}
 
 		if player.next_move_must_go_north_active && player.current_location.get_north_connections().is_empty() {
 			player.current_location = move_made.next_location_parsed.unwrap();
-			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
-			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+			in_progress_move.new_location_already_sent = true;
+			in_progress_move.use_timetable_card_already_sent = true;
 
 			player.next_move_must_go_north_active = false;
 		}
 
 		if move_made.next_location_parsed.is_some() && player.zug_faellt_aus_active && Country::from(player.current_location) == Country::Germany {
-			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
-			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+			in_progress_move.new_location_already_sent = true;
+			in_progress_move.use_timetable_card_already_sent = true;
 
 			player.zug_faellt_aus_active = false;
 		}
@@ -117,14 +133,14 @@ impl InProgressGame {
 			player.slovenia_as_a_treat_active = false;
 
 			if move_made.next_location_parsed.unwrap() == Location::Ljubljana {
-				self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
-				self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+				in_progress_move.new_location_already_sent = true;
+				in_progress_move.use_timetable_card_already_sent = true;
 				player.current_location = Location::Ljubljana;
 			}
 		}
 
-		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() && !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
-			if !self.players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
+		if move_made.next_location_parsed.is_some() && move_made.use_timetable_card_parsed.is_some() && !in_progress_move.new_location_already_sent {
+			if !players.iter().find(|x| x.id == player.id).unwrap().timetable_cards.contains(&move_made.use_timetable_card_parsed.clone().unwrap()) {
 				return Err(Box::new(crate::CustomError::MissingTimetableCard));
 			}
 
@@ -170,7 +186,7 @@ impl InProgressGame {
 				return Err(Box::new(crate::CustomError::InvalidNextLocation));
 			}
 
-			if player_wants_to_move_space_occupied_by_chaser(&self.players, self.runner, move_made.next_location_parsed.unwrap()) {
+			if player_wants_to_move_space_occupied_by_chaser(&players, self.runner, move_made.next_location_parsed.unwrap()) {
 				return Err(Box::new(crate::CustomError::InvalidNextLocation));
 			}
 
@@ -179,7 +195,7 @@ impl InProgressGame {
 					return Err(Box::new(crate::CustomError::YouMustGoToGermanyOrFrance));
 				} else {
 					player.luxembourg_is_germany_france_active = false;
-					self.get_extra_turns = 1;
+					get_extra_turns = 1;
 				}
 			}
 
@@ -190,18 +206,18 @@ impl InProgressGame {
 				return Ok(move_result);
 			}
 
-			self.last_used_timetable_card = move_made.use_timetable_card_parsed;
+			last_used_timetable_card = move_made.use_timetable_card_parsed;
 
 			if self.runner == player.id {
-				self.runner_path.push(move_made.next_location_parsed.unwrap());
+				runner_path.push(move_made.next_location_parsed.unwrap());
 
-				if move_made.next_location_parsed.unwrap() == self.destination && self.coins_runner >= 10 {
+				if move_made.next_location_parsed.unwrap() == self.destination && coins_runner >= 10 {
 					move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Runner, WinCondition::GotToDestination));
 					return Ok(move_result);
 				}
 			}
 
-			let runner_location = self.players.iter().filter(|x| x.id == self.runner).next().unwrap().current_location;
+			let runner_location = players.iter().filter(|x| x.id == self.runner).next().unwrap().current_location;
 			if move_made.next_location_parsed.unwrap() == runner_location {
 				move_result.finished_game = Some(FinishedGame::from_in_progress_game(&self, Team::Chaser, WinCondition::RunnerCaught));
 				move_result.runner_caught = true;
@@ -215,59 +231,57 @@ impl InProgressGame {
 				move_result.coins_received = Some(coins);
 
 				if self.current_turn == self.runner {
-					self.coins_runner += coins;
+					coins_runner += coins;
 				} else {
-					self.coins_chasers += coins;
+					coins_chasers += coins;
 				}
 			}
 
-			if !self.timetable_card_stack.is_empty() {
-				let timetable_card = self.timetable_card_stack.pop().unwrap();
+			if !timetable_card_stack.is_empty() {
+				let timetable_card = timetable_card_stack.pop().unwrap();
 				move_result.timetable_cards_received.push(timetable_card.clone());
 				
 				player.timetable_cards.push(timetable_card);
 			}
 
 			player.current_location = move_made.next_location_parsed.unwrap();
-			self.in_progress_move.as_mut().unwrap().new_location_already_sent = true;
-			self.in_progress_move.as_mut().unwrap().use_timetable_card_already_sent = true;
+			in_progress_move.new_location_already_sent = true;
+			in_progress_move.use_timetable_card_already_sent = true;
 		}
 
 		
 		if move_made.buy_powerup.is_some() && player.id != self.runner {
 			let powerup: Powerup = move_made.buy_powerup.unwrap().as_str().into();
 
-			if self.coins_chasers < powerup.get_price(self.players.len() - 1) {
+			if coins_chasers < powerup.get_price(players.len() - 1) {
 				return Err(Box::new(crate::CustomError::NotEnoughCoins));
 			}
 
-			self.coins_chasers -= powerup.get_price(self.players.len() - 1);
+			coins_chasers -= powerup.get_price(players.len() - 1);
 
 			match powerup {
 				Powerup::LearnRunnerCountry => {
-					move_result.power_up_status.runner_country = Some(self.players.iter().find(|x| x.id == self.runner).unwrap().current_location.into());
+					move_result.power_up_status.runner_country = Some(players.iter().find(|x| x.id == self.runner).unwrap().current_location.into());
 				},
 				Powerup::LearnRunnerLocation => {
-					move_result.power_up_status.runner_location = Some(self.players.iter().find(|x| x.id == self.runner).unwrap().current_location);
+					move_result.power_up_status.runner_location = Some(players.iter().find(|x| x.id == self.runner).unwrap().current_location);
 				},
 				Powerup::ChaserGetsTwoTurns => {
 					move_result.power_up_status.get_another_turn = true;
-					self.get_extra_turns = 1;
+					get_extra_turns = 1;
 				},
 				Powerup::LearnRunnerDestination => {
 					move_result.power_up_status.runner_destination = Some(self.destination);
 				},
 			};
-
-			self.power_up_status = move_result.power_up_status.clone();
 		}
 
 		if move_made.buy_event_card {
-			if !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
+			if !in_progress_move.new_location_already_sent {
 				return Err(Box::new(crate::CustomError::EventCardNoLocationSent));
 			}
 
-			if self.in_progress_move.as_ref().unwrap().event_card_bought {
+			if in_progress_move.event_card_bought {
 				return Err(Box::new(crate::CustomError::EventCardAlreadyBought));
 			}
 
@@ -276,15 +290,15 @@ impl InProgressGame {
 			}
 
 			if player.id == self.runner {
-				if self.coins_runner < 1 {
+				if coins_runner < 1 {
 					return Err(Box::new(crate::CustomError::NotEnoughCoins));
 				}
 			} else {
-				if self.coins_chasers < 1 {
+				if coins_chasers < 1 {
 					return Err(Box::new(crate::CustomError::NotEnoughCoins));
 				}
 			}
-			let mut event_card = self.event_card_stack.pop();
+			let mut event_card = event_card_stack.pop();
 
 			if event_card.is_none() {
 				return Err(Box::new(crate::CustomError::EventCardStackEmpty));
@@ -294,13 +308,13 @@ impl InProgressGame {
 
 			match event_card.as_ref().unwrap() {
 				EventCard::GiveMeYourCards => {
-					let cloned_players = self.players.clone();
+					let cloned_players = players.clone();
 					let players_with_event_cards: Vec<&Player> = cloned_players.iter().filter(|x| !x.event_cards.is_empty()).collect();
 					if !players_with_event_cards.is_empty() {
 						let random_player_with_event_cards = players_with_event_cards.choose(&mut rng).unwrap();
 						let random_event_card = random_player_with_event_cards.event_cards.choose(&mut rng).unwrap();
 	
-						self.players = self.players.clone().into_iter().map(|mut x| {
+						players = players.clone().into_iter().map(|mut x| {
 							if x.id == random_player_with_event_cards.id {
 								x.event_cards.retain(|x| x != random_event_card);
 							}
@@ -309,7 +323,7 @@ impl InProgressGame {
 
 						event_card = Some(random_event_card.clone());
 					} else {
-						event_card = self.event_card_stack.pop();
+						event_card = event_card_stack.pop();
 
 						if event_card.is_none() {
 							return Err(Box::new(crate::CustomError::EventCardStackEmpty));
@@ -339,7 +353,7 @@ impl InProgressGame {
 				EventCard::StealthOutfit => {
 					instantly_play_event_card = true;
 					player.stealth_mode_active = true;
-					self.in_progress_move.as_mut().unwrap().stealth_mode_enabled = true;
+					in_progress_move.stealth_mode_enabled = true;
 				},
 				EventCard::CardinalDirectionsAndVibes => {
 					instantly_play_event_card = true;
@@ -350,7 +364,7 @@ impl InProgressGame {
 					let mut rng = thread_rng();
 					let coins_for_runner = rng.gen_range(1..=6);
 					let mut coins_for_chasers = 0;
-					for _ in 0..self.players.len() - 1 {
+					for _ in 0..players.len() - 1 {
 						coins_for_chasers += rng.gen_range(1..=6);
 					}
 
@@ -360,8 +374,8 @@ impl InProgressGame {
 						move_result.coins_received = Some(coins_for_chasers);
 					}
 
-					self.coins_runner += coins_for_runner;
-					self.coins_chasers += coins_for_chasers;
+					coins_runner += coins_for_runner;
+					coins_chasers += coins_for_chasers;
 				},
 				EventCard::RatMode => {
 					instantly_play_event_card = true;
@@ -384,7 +398,7 @@ impl InProgressGame {
 				},
 				EventCard::ItsAllInTheTrees => {
 					instantly_play_event_card = true;
-					self.get_extra_turns = 1;
+					get_extra_turns = 1;
 				},
 				EventCard::BonjourToEveryone => {
 					instantly_play_event_card = true;
@@ -399,9 +413,9 @@ impl InProgressGame {
 				_ => (),
 			}
 
-			self.in_progress_move.as_mut().unwrap().event_card_bought = true;
+			in_progress_move.event_card_bought = true;
 			move_result.event_card_bought = true;
-			self.event_card_bought = true;
+			event_card_bought = true;
 			move_result.event_card_received = event_card.clone();
 
 			if !instantly_play_event_card {
@@ -421,10 +435,10 @@ impl InProgressGame {
 
 			match event_card {
 				EventCard::ConsiderVelocity => {
-					self.get_extra_turns = 1;
+					get_extra_turns = 1;
 				},
 				EventCard::ItsPopsicle => {
-					self.get_extra_turns = 1;
+					get_extra_turns = 1;
 				},
 				_ => (),
 			}
@@ -432,11 +446,24 @@ impl InProgressGame {
 
 		//TODO: dont apply any effects when returning an error (only persist changes to game state at the very end of the turn logic)
 		
-		if move_made.finish_move {
-			if !self.in_progress_move.as_ref().unwrap().new_location_already_sent {
-				return Err(Box::new(crate::CustomError::ActionNotAllowed));
-			}
+		if move_made.finish_move && !in_progress_move.new_location_already_sent {
+			return Err(Box::new(crate::CustomError::ActionNotAllowed));
+		}
 
+		//NO RETURNING ERRORS BEYOND THIS POINT
+		self.in_progress_move = Some(in_progress_move);
+		self.timetable_card_stack = timetable_card_stack;
+		self.get_extra_turns = get_extra_turns;
+		self.coins_chasers = coins_chasers;
+		self.coins_runner = coins_runner;
+		self.last_used_timetable_card = last_used_timetable_card;
+		self.runner_path = runner_path;
+		self.power_up_status = move_result.power_up_status.clone();
+		self.players = players;
+		self.event_card_bought = event_card_bought;
+		self.event_card_stack = event_card_stack;
+
+		if move_made.finish_move {
 			self.in_progress_move = None;
 
 			//Write next player into self.current_turn
