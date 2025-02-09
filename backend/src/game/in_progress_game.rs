@@ -443,8 +443,6 @@ impl InProgressGame {
 				_ => (),
 			}
 		}
-
-		//TODO: dont apply any effects when returning an error (only persist changes to game state at the very end of the turn logic)
 		
 		if move_made.finish_move && !in_progress_move.new_location_already_sent {
 			return Err(Box::new(crate::CustomError::ActionNotAllowed));
