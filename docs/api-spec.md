@@ -100,7 +100,7 @@ body:
 {
 	"player_id" "59628524-5c28-4c7e-890f-20bba691853e",
 	"next_location": "copenhagen", //the id of the spot the player moves to
-	"use_card": "joker", //the type of card the player used to make the turn
+	"use_timetable_card": "joker", //the type of card the player used to make the turn
 	"buy_event_card": true, //indicates that the player buys an event card
 	"use_event_card": "some_card_id", //event card that gets used for the turn
 	"buy_powerup": "power_up_id",
