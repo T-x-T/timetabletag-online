@@ -58,7 +58,7 @@ lobby:
 }
 ```
 
-in_progress:
+in_progress (requires query parameter player_id to be set!):
 ```json
 {
 	"runner": "Leon", //the runner for the game, the chasers are all players that are not the runner
