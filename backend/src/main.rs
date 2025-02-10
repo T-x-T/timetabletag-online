@@ -8,8 +8,6 @@ mod powerup;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
   rest_api::initialize_webserver().await?;
-  println!("Hello, world!");
-
   return Ok(());
 }
 

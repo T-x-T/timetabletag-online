@@ -122,7 +122,7 @@ impl InProgressGame {
 			player.next_move_must_go_north_active = false;
 		}
 
-		if move_made.next_location_parsed.is_some() && player.zug_faellt_aus_active && Country::from(player.current_location) == Country::Germany {
+		if player.zug_faellt_aus_active && move_made.next_location_parsed.is_some() && Country::from(player.current_location) == Country::Germany {
 			in_progress_move.new_location_already_sent = true;
 			in_progress_move.use_timetable_card_already_sent = true;
 
@@ -664,4 +664,5 @@ pub struct MoveResult {
 	pub timetable_cards_received: Vec<TimetableCard>,
 	pub finished_game: Option<FinishedGame>,
 	pub power_up_status: PowerupStatus,
+	pub your_current_location: Location, //TODO
 }
