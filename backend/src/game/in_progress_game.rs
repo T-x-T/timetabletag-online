@@ -664,5 +664,4 @@ pub struct MoveResult {
 	pub timetable_cards_received: Vec<TimetableCard>,
 	pub finished_game: Option<FinishedGame>,
 	pub power_up_status: PowerupStatus,
-	pub your_current_location: Location, //TODO
 }

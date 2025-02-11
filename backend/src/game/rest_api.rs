@@ -70,7 +70,7 @@ struct LobbyGameState {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct InProgressGameState {
+struct InProgressGameState { //TODO: add size of timetable card stack
 	runner: String,
 	destination: Option<String>,
 	current_turn: String,
@@ -86,6 +86,7 @@ struct InProgressGameState {
 	runner_destination: String,
 	chaser_gets_another_turn: bool,
 	chaser_locations: BTreeMap<String, String>,
+	your_current_location: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -95,6 +96,7 @@ struct GetCurrentStateQueryOptions {
 
 #[get("/api/v1/games/{game_id}/current_state")]
 pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uuid>, query: web::Query<GetCurrentStateQueryOptions>) -> impl Responder {
+	//TODO: return error when no player_id is set as query
 	match data.games.try_lock() {
 		Ok(games) => {
 			match games.get(&game_id) {
@@ -102,12 +104,12 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 					let current_state_json = match game {
 						Game::Lobby(game) => serde_json::to_string(&LobbyGameState {players: game.players.iter().map(|x| x.display_name.clone()).collect()}),
 						Game::InProgress(game) => serde_json::to_string(&InProgressGameState {
-							runner: game.players.iter().filter(|x| x.id == game.runner).next().unwrap().display_name.clone(),
+							runner: game.players.iter().find(|x| x.id == game.runner).unwrap().display_name.clone(),
 							destination: if query.player_id.is_some_and(|x| x == game.runner) {Some(game.destination.clone().to_string())} else {None},
-							current_turn: game.players.iter().filter(|x| x.id == game.current_turn).next().unwrap().display_name.clone(),
+							current_turn: game.players.iter().find(|x| x.id == game.current_turn).unwrap().display_name.clone(),
 							coins_runner: game.coins_runner,
 							coins_chasers: game.coins_chasers,
-							your_timetable_cards: game.players.iter().find(|x| x.id == query.player_id.unwrap_or_default()).unwrap().timetable_cards.iter().map(|x| x.to_string()).collect(),
+							your_timetable_cards: game.players.iter().find(|x| x.id == query.player_id.unwrap()).unwrap().timetable_cards.iter().map(|x| x.to_string()).collect(),
 							chaser_timetable_cards: game.players.iter().filter(|x| x.id != game.runner).map(|x| (x.display_name.clone(), x.timetable_cards.iter().map(|x| x.to_string()).collect())).collect(),
 							last_used_timetable_card: if game.last_used_timetable_card.is_some() {game.last_used_timetable_card.clone().unwrap().to_string()} else {String::new()},
 							dice_result: game.dice_result,
@@ -116,7 +118,8 @@ pub async fn get_current_state(data: web::Data<AppState>, game_id: web::Path<Uui
 							runner_current_location: if game.power_up_status.runner_location.is_some() {game.power_up_status.runner_location.unwrap().to_string()} else {String::default()},
 							runner_destination: if game.power_up_status.runner_destination.is_some() {game.power_up_status.runner_destination.unwrap().to_string()} else {String::default()},
 							chaser_gets_another_turn: game.power_up_status.get_another_turn,
-							chaser_locations: game.players.iter().filter(|x| x.id != game.runner && !x.stealth_mode_active).map(|x| (x.display_name.clone(), x.current_location.to_string())).collect()
+							chaser_locations: game.players.iter().filter(|x| x.id != game.runner && !x.stealth_mode_active).map(|x| (x.display_name.clone(), x.current_location.to_string())).collect(),
+							your_current_location: game.players.iter().find(|x| x.id == query.player_id.unwrap()).unwrap().current_location.to_string(),
 						}),
 						Game::Finished(game) => serde_json::to_string(game),
 					}.unwrap();
