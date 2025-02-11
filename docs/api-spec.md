@@ -62,7 +62,7 @@ in_progress (requires query parameter player_id to be set!):
 ```json
 {
 	"runner": "Leon", //the runner for the game, the chasers are all players that are not the runner
-	"destination": "Dublin", //only sent to the runner
+	"destination": "dublin", //only sent to the runner
 	"current_turn": "ExxPlore",
 	"coins_runner": 2,
 	"coins_chasers": 6,
@@ -80,7 +80,8 @@ in_progress (requires query parameter player_id to be set!):
 	"chaser_locations": {
 		"ExxPlore": "Paris",
 		"TheTxT": "Stuttgart",
-	}
+	},
+	"your_current_location": "nancy"
 }
 ```
 
