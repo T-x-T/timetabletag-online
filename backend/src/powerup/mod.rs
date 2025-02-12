@@ -20,14 +20,15 @@ impl Display for Powerup {
 	}
 }
 
-impl From<&str> for Powerup {
-	fn from(value: &str) -> Self {
+impl TryFrom<&str> for Powerup {
+	type Error = String;
+	fn try_from(value: &str) -> Result<Powerup, String> {
 		match value {
-			"learn_runner_country" => Powerup::LearnRunnerCountry,
-			"learn_runner_location" => Powerup::LearnRunnerLocation,
-			"chaser_gets_two_turns" => Powerup::ChaserGetsTwoTurns,
-			"learn_runner_destination" => Powerup::LearnRunnerDestination,
-			_ => panic!("{value} is not a valid powerup"),
+			"learn_runner_country" => Ok(Powerup::LearnRunnerCountry),
+			"learn_runner_location" => Ok(Powerup::LearnRunnerLocation),
+			"chaser_gets_two_turns" => Ok(Powerup::ChaserGetsTwoTurns),
+			"learn_runner_destination" => Ok(Powerup::LearnRunnerDestination),
+			_ => Err(format!("{value} is not a valid powerup")),
 		}
 	}
 }

@@ -35,11 +35,11 @@ impl InProgressGame {
 		let mut player: Player = self.players.clone().into_iter().find(|x| x.id == move_made.player_id).unwrap();
 
 		if move_made.next_location.is_some() {
-			move_made.next_location_parsed = Some(Location::from(move_made.next_location.clone().unwrap()));
+			move_made.next_location_parsed = Some(Location::try_from(move_made.next_location.clone().unwrap())?);
 		}
 
 		if move_made.use_timetable_card.is_some() {
-			move_made.use_timetable_card_parsed = Some(TimetableCard::from(move_made.use_timetable_card.clone().unwrap()))
+			move_made.use_timetable_card_parsed = Some(TimetableCard::try_from(move_made.use_timetable_card.clone().unwrap())?)
 		}
 		
 		
@@ -76,8 +76,8 @@ impl InProgressGame {
 
 			let orig_player_timetable_cards = player.timetable_cards.clone();
 			for timetable_card in &move_made.throw_timetable_cards_away {
-				if orig_player_timetable_cards.contains(&timetable_card.as_str().into()) {
-					player = remove_used_timetable_card_from_player(player, &timetable_card.as_str().into());
+				if orig_player_timetable_cards.contains(&timetable_card.as_str().try_into()?) {
+					player = remove_used_timetable_card_from_player(player, &timetable_card.as_str().try_into()?);
 
 					if !timetable_card_stack.is_empty() {
 						let timetable_card = timetable_card_stack.pop().unwrap();
@@ -251,7 +251,7 @@ impl InProgressGame {
 
 		
 		if move_made.buy_powerup.is_some() && player.id != self.runner {
-			let powerup: Powerup = move_made.buy_powerup.unwrap().as_str().into();
+			let powerup: Powerup = move_made.buy_powerup.unwrap().as_str().try_into()?;
 
 			if coins_chasers < powerup.get_price(players.len() - 1) {
 				return Err(Box::new(crate::CustomError::NotEnoughCoins));
@@ -425,7 +425,7 @@ impl InProgressGame {
 		}
 
 		if move_made.use_event_card.is_some() {
-			let event_card: EventCard = move_made.use_event_card.unwrap().into();
+			let event_card: EventCard = move_made.use_event_card.unwrap().try_into()?;
 
 			if !player.event_cards.contains(&event_card) {
 				return Err(Box::new(crate::CustomError::EventCardNotOnYourHand));

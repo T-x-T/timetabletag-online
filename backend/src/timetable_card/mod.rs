@@ -23,20 +23,24 @@ impl Display for TimetableCard {
 	}
 }
 
-impl std::convert::From<String> for TimetableCard {
-	fn from(value: String) -> Self {
-		return value.as_str().into();
+impl std::convert::TryFrom<String> for TimetableCard {
+	type Error = String;
+
+	fn try_from(value: String) -> Result<TimetableCard, String> {
+		return value.as_str().try_into();
 	}
 }
 
-impl std::convert::From<&str> for TimetableCard {
-	fn from(value: &str) -> Self {
+impl std::convert::TryFrom<&str> for TimetableCard {
+	type Error = String;
+	
+	fn try_from(value: &str) -> Result<TimetableCard, String> {
 		match value {
-			"low_speed" => TimetableCard::LowSpeed,
-			"high_speed" => TimetableCard::HighSpeed,
-			"plane" => TimetableCard::Plane,
-			"joker" => TimetableCard::Joker,
-			_ => panic!("{value} not a valid TimetableCard ID"),
+			"low_speed" => Ok(TimetableCard::LowSpeed),
+			"high_speed" => Ok(TimetableCard::HighSpeed),
+			"plane" => Ok(TimetableCard::Plane),
+			"joker" => Ok(TimetableCard::Joker),
+			_ => Err(format!("{value} not a valid TimetableCard ID")),
 		}
 	}
 }

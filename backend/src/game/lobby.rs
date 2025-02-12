@@ -66,7 +66,7 @@ impl Lobby {
 			host: self.host,
 			runner,
 			players: self.players.clone(),
-			destination: ["dublin", "copenhagen", "vienna", "rome", "madrid"].into_iter().nth(rand_destination_index).unwrap().into(),
+			destination: [Location::Dublin, Location::Copenhagen, Location::Vienna, Location::Rome, Location::Madrid].into_iter().nth(rand_destination_index).unwrap(),
 			current_turn: runner,
 			coins_runner: 0,
 			coins_chasers: 0,

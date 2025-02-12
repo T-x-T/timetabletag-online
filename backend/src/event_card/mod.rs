@@ -55,30 +55,31 @@ impl Display for EventCard {
 	}
 }
 
-impl std::convert::From<String> for EventCard {
-	fn from(value: String) -> Self {
+impl std::convert::TryFrom<String> for EventCard {
+	type Error = String;
+	fn try_from(value: String) -> Result<EventCard, String> {
 		match value.as_str() {
-			"give_me_your_cards" => EventCard::GiveMeYourCards,
-			"hunted_by_men_for_sport" => EventCard::HuntedByMenForSport,
-			"luxembourg_is_germany_france" => EventCard::LuxembourgIsGermanyFrance,
-			"lets_go_to_the_beach" => EventCard::LetsGoToTheBeach,
-			"imagine_if_trains" => EventCard::ImagineTrains,
-			"consider_velocity" => EventCard::ConsiderVelocity,
-			"its_popsicle" => EventCard::ItsPopsicle,
-			"hydrate_or_diedrate" => EventCard::HydrateOrDiedrate,
-			"stealth_outfit" => EventCard::StealthOutfit,
-			"cardinal_directions_and_vibes" => EventCard::CardinalDirectionsAndVibes,
-			"pizzazz" => EventCard::Pizzazz,
-			"rat_mode" => EventCard::RatMode,
-			"bing_bong" => EventCard::BingBong,
-			"leave_country_immediately" => EventCard::LeaveCountryImmediately,
-			"zug_faellt_aus" => EventCard::ZugFaelltAus,
-			"snack_zone" => EventCard::SnackZone,
-			"its_all_in_the_trees" => EventCard::ItsAllInTheTrees,
-			"bonjour_to_everyone" => EventCard::BonjourToEveryone,
-			"no_talk" => EventCard::NoTalk,
-			"slovenia_as_a_treat" => EventCard::SloveniaAsATreat,
-			_ => panic!("{value} not a valid EventCard ID"),
+			"give_me_your_cards" => Ok(EventCard::GiveMeYourCards),
+			"hunted_by_men_for_sport" => Ok(EventCard::HuntedByMenForSport),
+			"luxembourg_is_germany_france" => Ok(EventCard::LuxembourgIsGermanyFrance),
+			"lets_go_to_the_beach" => Ok(EventCard::LetsGoToTheBeach),
+			"imagine_if_trains" => Ok(EventCard::ImagineTrains),
+			"consider_velocity" => Ok(EventCard::ConsiderVelocity),
+			"its_popsicle" => Ok(EventCard::ItsPopsicle),
+			"hydrate_or_diedrate" => Ok(EventCard::HydrateOrDiedrate),
+			"stealth_outfit" => Ok(EventCard::StealthOutfit),
+			"cardinal_directions_and_vibes" => Ok(EventCard::CardinalDirectionsAndVibes),
+			"pizzazz" => Ok(EventCard::Pizzazz),
+			"rat_mode" => Ok(EventCard::RatMode),
+			"bing_bong" => Ok(EventCard::BingBong),
+			"leave_country_immediately" => Ok(EventCard::LeaveCountryImmediately),
+			"zug_faellt_aus" => Ok(EventCard::ZugFaelltAus),
+			"snack_zone" => Ok(EventCard::SnackZone),
+			"its_all_in_the_trees" => Ok(EventCard::ItsAllInTheTrees),
+			"bonjour_to_everyone" => Ok(EventCard::BonjourToEveryone),
+			"no_talk" => Ok(EventCard::NoTalk),
+			"slovenia_as_a_treat" => Ok(EventCard::SloveniaAsATreat),
+			_ => Err(format!("{value} not a valid EventCard ID")),
 		}
 	}
 }
